@@ -108,6 +108,21 @@ public class UpdateTransactionStatusDto
     public string Status { get; set; } = string.Empty;
 }
 
+public class ManualTransactionDto
+{
+    [Required]
+    public decimal Amount { get; set; }
+
+    [Required]
+    [MaxLength(250)]
+    public string Title { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    public string Category { get; set; } = string.Empty;
+
+    public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
+}
+
 // ── Subscription DTOs ────────────────────────────────────────────────────
 
 public class SubscriptionDto

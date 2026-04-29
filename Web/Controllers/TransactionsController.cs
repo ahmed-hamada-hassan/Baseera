@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Baseera.Api.Application.DTOs;
 using Baseera.Api.Application.Interfaces;
+using Baseera.Api.Domain.Entities;
 using Baseera.Api.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -99,6 +100,46 @@ public class TransactionsController : ControllerBase
             IsSubscription = transaction.IsSubscription,
             TransactionDate = transaction.TransactionDate
         });
+    }
+
+    /// <summary>
+    /// POST manual transaction. Creates a Confirmed transaction.
+    /// </summary>
+    [HttpPost("manual")]
+    public async Task<IActionResult> PostManualTransaction([FromBody] ManualTransactionDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userId = GetUserId();
+
+        var transaction = new Transaction
+        {
+            UserId = userId,
+            Amount = dto.Amount,
+            MerchantName = dto.Title,
+            Category = dto.Category,
+            TransactionDate = dto.TransactionDate,
+            Source = TransactionSource.Manual.ToString(),
+            Status = TransactionStatus.Confirmed.ToString()
+        };
+
+        await _transactionRepo.AddAsync(transaction);
+
+        var responseDto = new TransactionDto
+        {
+            Id = transaction.Id,
+            AccountId = transaction.AccountId,
+            Amount = transaction.Amount,
+            MerchantName = transaction.MerchantName,
+            Category = transaction.Category,
+            Source = transaction.Source,
+            Status = transaction.Status,
+            IsSubscription = transaction.IsSubscription,
+            TransactionDate = transaction.TransactionDate
+        };
+
+        return CreatedAtAction(nameof(GetTransactions), null, responseDto);
     }
 
     private Guid GetUserId()

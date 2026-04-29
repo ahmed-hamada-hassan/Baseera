@@ -367,6 +367,42 @@ Submits AI-processed bill data. Creates a **Pending** transaction (no account li
 
 ---
 
+#### `POST /api/transactions/manual`
+
+Creates a manual transaction. Creates a **Confirmed** transaction.
+
+**Request Body:**
+```json
+{
+  "amount": 50.00,
+  "title": "Coffee",
+  "category": "Food & Drink",
+  "transactionDate": "2026-04-30T10:00:00Z"
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": "8c9b5a32-1e4b-4a5c-8d12-9b2f4c5e6a7b",
+  "accountId": null,
+  "amount": 50.00,
+  "merchantName": "Coffee",
+  "category": "Food & Drink",
+  "source": "Manual",
+  "status": "Confirmed",
+  "isSubscription": false,
+  "transactionDate": "2026-04-30T10:00:00Z"
+}
+```
+
+**Notes:**
+- `source` is automatically set to `"Manual"`
+- `status` is automatically set to `"Confirmed"`
+- `merchantName` in the response maps to the requested `title`
+
+---
+
 #### `PATCH /api/transactions/{id}/status`
 
 Updates a transaction's status (e.g., confirm or flag an OCR transaction).
