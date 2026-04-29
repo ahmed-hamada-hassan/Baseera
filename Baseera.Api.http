@@ -1,6 +1,121 @@
-@Baseera.Api_HostAddress = http://localhost:5002
+###############################################################################
+# Baseera FinTech API — HTTP Test File
+# Usage:  Run requests top-to-bottom.
+#         1. Register or Login first to get a JWT token.
+#         2. Copy the token from the response into @token.
+#         3. Run the protected endpoints.
+###############################################################################
 
-GET {{Baseera.Api_HostAddress}}/weatherforecast/
+@host = https://localhost:7181
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJlbWFpbCI6ImRlbW9AYmFzZWVyYS5jb20iLCJqdGkiOiIwYjFhY2UxYy0zNGRjLTQ5M2QtOTEwMy00MThiMTk5NWNjN2YiLCJmaXJzdE5hbWUiOiJBaG1lZCIsImxhc3ROYW1lIjoiSGFzc2FuIiwiZXhwIjoxNzc3NTQyNjQ1LCJpc3MiOiJCYXNlZXJhLkFwaSIsImF1ZCI6IkJhc2VlcmEuQ2xpZW50In0.R0_z5BABC03pB0VYtVGY2z9_K9u5FxoVJ5mzhR4-hmE
+
+###############################################################################
+# ═══════════════════════════════ AUTH ═══════════════════════════════════════
+###############################################################################
+
+### Register a new user
+POST {{host}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "email": "demo@b.com",
+  "password": "P@ssw0rd!",
+  "firstName": "Ahmed",
+  "lastName": "Hassan",
+  "monthlyIncome": 15000.00
+}
+
+###
+
+### Login with existing user
+POST {{host}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@baseera.com",
+  "password": "P@ssw0rd!"
+}
+
+###############################################################################
+# ═══════════════════════════════ ACCOUNTS ═══════════════════════════════════
+###############################################################################
+
+### Get all accounts for the authenticated user
+GET {{host}}/api/Accounts
 Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Sync transactions for an account (triggers subscription detection)
+# Replace the accountId with a real GUID from the GET Accounts response
+POST {{host}}/api/Accounts/sync
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "accountId": "00000000-0000-0000-0000-000000000000"
+}
+
+###############################################################################
+# ═══════════════════════════════ TRANSACTIONS ══════════════════════════════
+###############################################################################
+
+### Get transaction history (paginated)
+GET {{host}}/api/Transactions?page=1&pageSize=50
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Submit OCR-processed bill data (creates a Pending transaction)
+POST {{host}}/api/Transactions/ocr
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "amount": 45.99,
+  "merchantName": "STC Fiber",
+  "category": "Utilities",
+  "transactionDate": "2026-04-28T10:00:00Z",
+  "rawAiData": "{\"confidence\": 0.95, \"source\": \"receipt_scan\"}"
+}
+
+###
+
+### Update transaction status (Pending → Confirmed or Flagged)
+# Replace {id} with a real transaction GUID
+PATCH {{host}}/api/Transactions/00000000-0000-0000-0000-000000000000/status
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status": "Confirmed"
+}
+
+###############################################################################
+# ═══════════════════════════════ SUBSCRIPTIONS ═════════════════════════════
+###############################################################################
+
+### Get all subscriptions (also evaluates at-risk status)
+GET {{host}}/api/Subscriptions
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Cancel a subscription
+# Replace {id} with a real subscription GUID
+PATCH {{host}}/api/Subscriptions/00000000-0000-0000-0000-000000000000/cancel
+Authorization: Bearer {{token}}
+
+###############################################################################
+# ═══════════════════════════════ DASHBOARD ═════════════════════════════════
+###############################################################################
+
+### Get Financial Health Dashboard
+GET {{host}}/api/Dashboard
+Accept: application/json
+Authorization: Bearer {{token}}
 
 ###

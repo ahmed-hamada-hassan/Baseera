@@ -45,7 +45,6 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 // ══════════════════════════════════════════════════════════════════════════
 // 3. JWT AUTHENTICATION
 // ══════════════════════════════════════════════════════════════════════════
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // Prevent default claim type mappings
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
