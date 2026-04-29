@@ -24,6 +24,8 @@ info:
     name: MIT
 
 servers:
+  - url: https://baseera.runasp.net
+    description: Production Server
   - url: https://localhost:7181
     description: Local Development (HTTPS)
   - url: http://localhost:5002
