@@ -1,0 +1,72 @@
+[
+  {
+    "amount": 299.99,
+    "merchantName": "Netflix",
+    "category": "Entertainment",
+    "transactionDate": "2026-04-15T10:30:00Z",
+    "rawData": "{\"source\":\"open_banking\",\"ref\":\"TXN-MOCK-001\"}"
+  },
+  {
+    "amount": 49.99,
+    "merchantName": "Spotify Premium",
+    "category": "Entertainment",
+    "transactionDate": "2026-04-14T08:00:00Z",
+    "rawData": "{\"source\":\"open_banking\",\"ref\":\"TXN-MOCK-002\"}"
+  },
+  {
+    "amount": 1500.00,
+    "merchantName": "Carrefour Maadi",
+    "category": "Groceries",
+    "transactionDate": "2026-04-13T14:20:00Z",
+    "rawData": null
+  },
+  {
+    "amount": 92.00,
+    "merchantName": "Uber",
+    "category": "Transport",
+    "transactionDate": "2026-04-12T07:45:00Z",
+    "rawData": null
+  },
+  {
+    "amount": 500.00,
+    "merchantName": "GOLDS GYM",
+    "category": "Health & Fitness",
+    "transactionDate": "2026-04-10T06:00:00Z",
+    "rawData": "{\"source\":\"open_banking\",\"ref\":\"TXN-MOCK-005\"}"
+  },
+  {
+    "amount": 239.99,
+    "merchantName": "Adobe Systems",
+    "category": "Software",
+    "transactionDate": "2026-04-09T12:00:00Z",
+    "rawData": "{\"source\":\"open_banking\",\"ref\":\"TXN-MOCK-006\"}"
+  },
+  {
+    "amount": 850.00,
+    "merchantName": "Amazon.eg",
+    "category": "Shopping",
+    "transactionDate": "2026-04-08T16:30:00Z",
+    "rawData": null
+  },
+  {
+    "amount": 150.00,
+    "merchantName": "LinkedIn Corp",
+    "category": "Professional",
+    "transactionDate": "2026-04-07T09:00:00Z",
+    "rawData": "{\"source\":\"open_banking\",\"ref\":\"TXN-MOCK-008\"}"
+  },
+  {
+    "amount": 350.00,
+    "merchantName": "Vodafone Recharge",
+    "category": "Telecom",
+    "transactionDate": "2026-04-05T11:00:00Z",
+    "rawData": null
+  },
+  {
+    "amount": 2200.00,
+    "merchantName": "Electricity Bill",
+    "category": "Utilities",
+    "transactionDate": "2026-04-01T08:00:00Z",
+    "rawData": null
+  }
+]
