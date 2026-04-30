@@ -42,6 +42,10 @@ tags:
     description: AI-detected subscriptions and cancellation.
   - name: Dashboard
     description: Financial health overview and insights.
+  - name: Analytics
+    description: Analytics and spending summaries.
+  - name: Chatbot
+    description: Interactive AI chat for financial queries.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECURITY
@@ -482,6 +486,60 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+  # ═══════════════════════════════ ANALYTICS ══════════════════════════════
+  /api/Analytics/summary:
+    get:
+      tags: [Analytics]
+      summary: Get Analytics Summary
+      description: Returns an aggregation of total spending grouped by Category for the current user.
+      responses:
+        "200":
+          description: Analytics data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpendByCategory"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ═══════════════════════════════ CHATBOT ════════════════════════════════
+  /api/Chatbot/message:
+    post:
+      tags: [Chatbot]
+      summary: Send a message to the Chatbot
+      description: Returns a structured response containing a text reply and a ChartData object based on the user's message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "How much did I spend on Uber?"
+      responses:
+        "200":
+          description: Chatbot response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # COMPONENTS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -725,6 +783,31 @@ components:
           type: number
           format: decimal
           example: 249.97
+
+    # ── Chatbot ───────────────────────────────────────────────────────────
+    ChatMessageResponse:
+      type: object
+      properties:
+        textReply:
+          type: string
+          example: "You spent $250.00 on Uber/Transport."
+        chartData:
+          $ref: "#/components/schemas/ChartData"
+
+    ChartData:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+          example: ["Uber/Transport", "Other Spend"]
+        values:
+          type: array
+          items:
+            type: number
+            format: decimal
+          example: [250.00, 1000.00]
 
     # ── Shared Error ──────────────────────────────────────────────────────
     ErrorMessage:

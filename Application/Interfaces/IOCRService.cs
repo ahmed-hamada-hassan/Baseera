@@ -5,7 +5,7 @@ namespace Baseera.Api.Application.Interfaces;
 public interface IOCRService
 {
     /// <summary>
-    /// Processes AI-extracted bill data and saves as a Pending transaction.
+    /// Processes an image stream using AI and extracts bill data.
     /// </summary>
-    Task<TransactionDto> ProcessOcrResultAsync(Guid userId, OcrResultDto ocrResult);
+    Task<OcrResultDto> ProcessImageAsync(Stream imageStream);
 }

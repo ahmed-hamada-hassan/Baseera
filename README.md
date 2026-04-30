@@ -17,6 +17,8 @@ Built with **.NET 8**, **SQL Server**, **ASP.NET Core Identity**, and **JWT Auth
   - [Transactions](#3-transactions)
   - [Subscriptions](#4-subscriptions)
   - [Dashboard](#5-dashboard)
+  - [Analytics](#6-analytics)
+  - [Chatbot](#7-chatbot)
 - [Business Logic](#business-logic)
   - [Subscription Detection (Implicit Linking)](#subscription-detection-implicit-linking)
   - [At-Risk Detection](#at-risk-detection)
@@ -522,6 +524,53 @@ Returns a comprehensive **Financial Health Overview** for the current month.
 - `remainingBudget` — `monthlyIncome - totalSpendThisMonth`
 - `totalSubscriptionCost` — Sum of all non-cancelled subscription costs
 - `spendByCategory` — Aggregated spending grouped by category, sorted descending
+
+---
+
+### 6. Analytics
+
+> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
+
+#### `GET /api/analytics/summary`
+
+Returns an aggregation of total spending grouped by Category for the current user.
+
+**Response (200):**
+```json
+[
+  { "category": "Shopping", "amount": 3950.00 },
+  { "category": "Utilities", "amount": 1800.00 },
+  { "category": "Groceries", "amount": 1250.00 }
+]
+```
+
+---
+
+### 7. Chatbot
+
+> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
+
+#### `POST /api/chatbot/message`
+
+Sends a message to the AI Chatbot and returns a text reply along with chart data.
+
+**Request Body:**
+```json
+{
+  "message": "How much did I spend on Uber?"
+}
+```
+
+**Response (200):**
+```json
+{
+  "textReply": "You spent $250.00 on Uber/Transport.",
+  "chartData": {
+    "labels": ["Uber/Transport", "Other Spend"],
+    "values": [250.00, 1000.00]
+  }
+}
+```
 
 ---
 

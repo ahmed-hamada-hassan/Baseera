@@ -6,49 +6,33 @@ using Baseera.Api.Domain.Enums;
 namespace Baseera.Api.Application.Services;
 
 /// <summary>
-/// Processes OCR/AI-extracted bill data and saves as pending transactions.
+/// Processes OCR/AI-extracted bill data.
 /// </summary>
 public class OCRService : IOCRService
 {
-    private readonly ITransactionRepository _transactionRepo;
     private readonly ILogger<OCRService> _logger;
 
-    public OCRService(ITransactionRepository transactionRepo, ILogger<OCRService> logger)
+    public OCRService(ILogger<OCRService> logger)
     {
-        _transactionRepo = transactionRepo;
         _logger = logger;
     }
 
-    public async Task<TransactionDto> ProcessOcrResultAsync(Guid userId, OcrResultDto ocrResult)
+    public async Task<OcrResultDto> ProcessImageAsync(Stream imageStream)
     {
-        var transaction = new Transaction
-        {
-            UserId = userId,
-            AccountId = null, // OCR transactions are not linked to a specific account
-            Amount = ocrResult.Amount,
-            MerchantName = ocrResult.MerchantName,
-            Category = ocrResult.Category,
-            Source = TransactionSource.OCR.ToString(),
-            Status = TransactionStatus.Pending.ToString(),
-            RawAiData = ocrResult.RawAiData,
-            IsSubscription = false,
-            TransactionDate = ocrResult.TransactionDate
-        };
+        // Mock AI processing: In a real scenario, this would send the stream to Google Cloud Vision, Gemini, etc.
+        await Task.Delay(500); // Simulate network call
 
-        await _transactionRepo.AddAsync(transaction);
-        _logger.LogInformation("OCR transaction created: {MerchantName} - {Amount}", ocrResult.MerchantName, ocrResult.Amount);
+        var jsonResult = "{\n  \"Amount\": 42.50,\n  \"MerchantName\": \"Coffee Shop\",\n  \"Category\": \"Food & Dining\"\n}";
 
-        return new TransactionDto
+        _logger.LogInformation("Image processed successfully.");
+
+        return new OcrResultDto
         {
-            Id = transaction.Id,
-            AccountId = transaction.AccountId,
-            Amount = transaction.Amount,
-            MerchantName = transaction.MerchantName,
-            Category = transaction.Category,
-            Source = transaction.Source,
-            Status = transaction.Status,
-            IsSubscription = transaction.IsSubscription,
-            TransactionDate = transaction.TransactionDate
+            Amount = 42.50m,
+            MerchantName = "Coffee Shop",
+            Category = "Food & Dining",
+            TransactionDate = DateTime.UtcNow,
+            RawAiData = jsonResult
         };
     }
 }

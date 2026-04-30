@@ -50,18 +50,48 @@ public class TransactionsController : ControllerBase
     }
 
     /// <summary>
-    /// POST OCR-processed bill data. Creates a Pending transaction.
+    /// POST receipt image. Creates a Confirmed transaction from AI extracted data.
     /// </summary>
     [HttpPost("ocr")]
-    public async Task<IActionResult> PostOcrResult([FromBody] OcrResultDto dto)
+    public async Task<IActionResult> PostOcrResult(IFormFile file)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        if (file == null || file.Length == 0)
+            return BadRequest("No file uploaded.");
 
         var userId = GetUserId();
-        var result = await _ocrService.ProcessOcrResultAsync(userId, dto);
 
-        return CreatedAtAction(nameof(GetTransactions), new { }, result);
+        using var stream = file.OpenReadStream();
+        var aiData = await _ocrService.ProcessImageAsync(stream);
+
+        var transaction = new Transaction
+        {
+            UserId = userId,
+            Amount = aiData.Amount,
+            MerchantName = aiData.MerchantName,
+            Category = aiData.Category,
+            Source = TransactionSource.OCR.ToString(),
+            Status = TransactionStatus.Confirmed.ToString(),
+            RawAiData = aiData.RawAiData,
+            IsSubscription = false,
+            TransactionDate = aiData.TransactionDate
+        };
+
+        await _transactionRepo.AddAsync(transaction);
+
+        var responseDto = new TransactionDto
+        {
+            Id = transaction.Id,
+            AccountId = transaction.AccountId,
+            Amount = transaction.Amount,
+            MerchantName = transaction.MerchantName,
+            Category = transaction.Category,
+            Source = transaction.Source,
+            Status = transaction.Status,
+            IsSubscription = transaction.IsSubscription,
+            TransactionDate = transaction.TransactionDate
+        };
+
+        return CreatedAtAction(nameof(GetTransactions), null, responseDto);
     }
 
     /// <summary>

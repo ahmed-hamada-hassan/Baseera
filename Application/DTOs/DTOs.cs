@@ -155,3 +155,23 @@ public class SpendByCategoryDto
     public string Category { get; set; } = string.Empty;
     public decimal Amount { get; set; }
 }
+
+// ── Chatbot DTOs ─────────────────────────────────────────────────────────
+
+public class ChatMessageRequestDto
+{
+    [Required]
+    public string Message { get; set; } = string.Empty;
+}
+
+public class ChatMessageResponseDto
+{
+    public string TextReply { get; set; } = string.Empty;
+    public ChartDataDto? ChartData { get; set; }
+}
+
+public class ChartDataDto
+{
+    public List<string> Labels { get; set; } = new();
+    public List<decimal> Values { get; set; } = new();
+}
