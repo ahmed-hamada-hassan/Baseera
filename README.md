@@ -19,7 +19,7 @@
 
 ## 🚀 Demo / Live Preview
 
-> 🌐 **Live App:** [https://baseera.runasp.net](http://baseera.runasp.net)
+> 🌐 **Live App:** [https://baseera-kappa.vercel.app/](https://baseera-kappa.vercel.app/)
 
 Use the following credentials to explore the full demo experience immediately — no registration required:
 
