@@ -4,6 +4,7 @@ import { CreditCard, ScanLine, ShoppingBag, Coffee, MonitorPlay, Zap } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactions, useUpdateTransactionStatus } from '@/features/transactions/hooks/useTransactions';
 import { OcrScannerModal } from '@/features/transactions/components/OcrScannerModal';
+import { ManualTransactionModal } from '@/features/transactions/components/ManualTransactionModal';
 import type { Transaction } from '@/shared/lib/schemas/openapi.schema';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -84,6 +85,7 @@ function TransactionRow({ tx, onConfirm }: { tx: Transaction; onConfirm: (id: st
 export function TransactionsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('الكل');
   const [showOcr, setShowOcr] = useState(false);
+  const [showManual, setShowManual] = useState(false);
 
   const { data: transactions, isLoading, error } = useTransactions(1, 100);
   const { mutate: updateStatus } = useUpdateTransactionStatus();
@@ -111,13 +113,22 @@ export function TransactionsPage() {
           </p>
         </div>
         
-        <button
-          onClick={() => setShowOcr(true)}
-          className="w-full sm:w-auto justify-center h-10 px-4 bg-[#0F172A] hover:bg-[#1E293B] text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors shadow-sm"
-        >
-          <ScanLine size={16} />
-          مسح إيصال جديد
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setShowManual(true)}
+            className="flex-1 sm:flex-none justify-center h-10 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-[#1E293B] text-sm font-medium rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+          >
+            إضافة يدوية
+          </button>
+          <button
+            onClick={() => setShowOcr(true)}
+            className="flex-1 sm:flex-none justify-center h-10 px-4 bg-[#0F172A] hover:bg-[#1E293B] text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <ScanLine size={16} />
+            <span className="hidden sm:inline">مسح إيصال جديد</span>
+            <span className="sm:hidden">مسح إيصال</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Card */}
@@ -181,8 +192,9 @@ export function TransactionsPage() {
         </div>
       </div>
 
-      {/* OCR Modal */}
+      {/* Modals */}
       <OcrScannerModal isOpen={showOcr} onClose={() => setShowOcr(false)} />
+      <ManualTransactionModal isOpen={showManual} onClose={() => setShowManual(false)} />
     </div>
   );
 }

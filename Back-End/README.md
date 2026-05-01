@@ -1,220 +1,148 @@
-# 🏦 Baseera API
+<div align="center">
 
-**FinTech Hackathon MVP** — Personal Finance Management with AI-Driven Subscription Detection
+# ⚙️ Baseera — Backend API
 
-Built with **.NET 8**, **SQL Server**, **ASP.NET Core Identity**, and **JWT Authentication**.
+[![.NET](https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://learn.microsoft.com/en-us/aspnet/core/)
+[![SQL Server](https://img.shields.io/badge/SQL_Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
+[![Entity Framework](https://img.shields.io/badge/Entity_Framework_Core-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://learn.microsoft.com/en-us/ef/core/)
+[![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://swagger.io/)
 
----
+A production-ready REST API built with Clean Architecture principles, handling all financial data, authentication, and AI orchestration.
 
-## Table of Contents
-
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Authentication Flow](#authentication-flow)
-- [API Endpoints](#api-endpoints)
-  - [Auth](#1-auth)
-  - [Accounts](#2-accounts)
-  - [Transactions](#3-transactions)
-  - [Subscriptions](#4-subscriptions)
-  - [Dashboard](#5-dashboard)
-  - [Analytics](#6-analytics)
-  - [Chatbot](#7-chatbot)
-- [Business Logic](#business-logic)
-  - [Subscription Detection (Implicit Linking)](#subscription-detection-implicit-linking)
-  - [At-Risk Detection](#at-risk-detection)
-  - [OCR Processing](#ocr-processing)
-- [Data Models](#data-models)
-- [Rate Limiting](#rate-limiting)
-- [Seed Data](#seed-data)
-- [Configuration](#configuration)
+</div>
 
 ---
 
-## Architecture
+## ⚡ Tech Stack
 
-The project follows a **simplified Clean Architecture** within a single project:
-
-```
-Baseera.Api/
-│
-├── Domain/                          # Core business entities & enums
-│   ├── Entities/
-│   │   ├── Account.cs               # Bank/wallet account
-│   │   ├── Transaction.cs           # Financial transaction
-│   │   └── Subscription.cs          # Tracked subscription
-│   └── Enums/
-│       ├── TransactionSource.cs     # Bank | OCR | Manual
-│       ├── TransactionStatus.cs     # Pending | Confirmed | Flagged
-│       └── SubscriptionStatus.cs    # Active | AtRisk | Cancelled
-│
-├── Application/                     # Business logic & contracts
-│   ├── DTOs/
-│   │   └── DTOs.cs                  # All request/response DTOs
-│   ├── Interfaces/                  # Repository & service contracts
-│   └── Services/
-│       ├── BankSyncService.cs       # Mock Open Banking sync
-│       ├── SubscriptionEngine.cs    # Implicit linking detection
-│       ├── FinancialInsightsService.cs  # At-risk evaluation
-│       └── OCRService.cs            # Bill scanning processor
-│
-├── Infrastructure/                  # Data access & identity
-│   ├── Data/
-│   │   ├── AppDbContext.cs          # EF Core DbContext
-│   │   └── SeedData.cs             # Demo data seeder
-│   ├── Identity/
-│   │   └── ApplicationUser.cs      # Extended IdentityUser
-│   ├── Migrations/                  # EF Core migrations
-│   └── Repositories/               # EF Core implementations
-│
-├── Web/                             # API surface
-│   ├── Controllers/                 # 5 API controllers
-│   ├── Middleware/
-│   │   └── GlobalExceptionMiddleware.cs
-│   └── Configurations/
-│       └── RateLimitingConfig.cs
-│
-├── MockData/
-│   └── mock_transactions.json       # Simulated bank data
-│
-├── Program.cs                       # Application entry point & DI
-└── appsettings.json                 # Configuration
-```
-
-### Dependency Flow
-
-```
-Controllers → Services/Interfaces → Repositories → DbContext → SQL Server
-                                         ↑
-                                    Domain Entities
-```
+| Category | Technology | Purpose |
+|----------|-----------|---------|
+| **Framework** | ASP.NET Core 8 | Web API hosting |
+| **Language** | C# 12 | Server-side logic |
+| **Architecture** | Clean Architecture | Separation of concerns (Web → Application → Domain → Infrastructure) |
+| **Database** | Microsoft SQL Server | Relational data persistence |
+| **ORM** | Entity Framework Core 8 | Database access and migrations |
+| **Authentication** | ASP.NET Core Identity + JWT Bearer | User management and token-based auth |
+| **API Documentation** | Swashbuckle / Swagger | Auto-generated OpenAPI specification |
+| **Hosting** | runasp.net | Live deployment |
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- SQL Server (LocalDB is included with Visual Studio)
+- **.NET SDK 8.0+** — [Download](https://dotnet.microsoft.com/download/dotnet/8.0)
+- **SQL Server** (or SQL Server Express / LocalDB)
+- **Visual Studio 2022** or **VS Code** with C# extension
 
-### Setup
+### Installation & Run
 
 ```bash
 # 1. Clone the repository
-git clone <repo-url>
-cd Baseera
+git clone https://github.com/your-org/Baseera.git
+cd Baseera/Back-End
 
-# 2. Restore packages
+# 2. Restore NuGet packages
 dotnet restore
 
-# 3. Apply database migrations
+# 3. Configure environment variables (see section below)
+# Edit appsettings.Development.json with your connection string
+
+# 4. Apply database migrations
 dotnet ef database update
 
-# 4. Run the API
+# 5. Run the API
 dotnet run
 ```
 
-The API will start at `http://localhost:5002` (or the URL in `launchSettings.json`).
+The API will be available at **http://localhost:5002** (or **https://localhost:7002**).
 
-Swagger UI is available at the root URL: **http://localhost:5002/swagger**
-
-### Demo Credentials
-
-| Email | Password | Provider Type |
-|-------|----------|---------------|
-| `demo@baseera.com` | `Demo@123` | Mixed (Bank/EWallet/Cash) |
+**Swagger UI:** `http://localhost:5002/swagger`
 
 ---
 
-## Authentication Flow
+## 🔧 Environment Variables (appsettings.json)
 
-The API uses **JWT Bearer Token** authentication with **24-hour expiration**.
+> ⚠️ **Never commit secrets to source control.** Use `appsettings.Development.json` for local overrides or User Secrets.
 
-```
-┌─────────┐       POST /api/auth/login        ┌─────────────┐
-│  Client  │ ──────────────────────────────► │  AuthController │
-│          │   { email, password }            │               │
-│          │ ◄────────────────────────────── │               │
-│          │   { token, expiration, ... }     └───────────────┘
-│          │
-│          │       GET /api/accounts           ┌─────────────────┐
-│          │ ──────────────────────────────► │ AccountsController │
-│          │   Authorization: Bearer <token>  │                   │
-│          │ ◄────────────────────────────── │                   │
-│          │   [ { id, provider, balance } ]  └───────────────────┘
-└──────────┘
-```
-
-### Step-by-Step
-
-1. **Register** or **Login** → receive a JWT token
-2. Include the token in all subsequent requests:
-   ```
-   Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-   ```
-3. The token contains these claims:
-   - `sub` — User ID (string)
-   - `email` — User email
-   - `firstName` / `lastName` — User name
-   - `exp` — Expiration timestamp (24h from issue)
-
-### JWT Configuration
-
-| Setting | Value |
-|---------|-------|
-| Algorithm | HMAC-SHA256 |
-| Expiration | 24 hours |
-| Issuer | `Baseera.Api` |
-| Audience | `Baseera.Client` |
-
----
-
-## API Endpoints
-
-### 1. Auth
-
-> **Rate Limit**: `IpRateLimit` — 5 requests/minute per IP
-
-#### `POST /api/auth/register`
-
-Creates a new user account (serves as onboarding).
-
-**Request Body:**
 ```json
 {
-  "email": "user@example.com",
-  "password": "SecurePass@123",
-  "firstName": "Ahmed",
-  "lastName": "Hassan"
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=YOUR_SERVER;Database=BaseeraDb;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Key": "your-super-secret-key-must-be-at-least-32-chars",
+    "Issuer": "Baseera.Api",
+    "Audience": "Baseera.Client"
+  }
 }
 ```
 
-**Response (200):**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "expiration": "2026-04-30T12:00:00Z",
-  "userId": "559b1975-535c-473e-973e-b2242ada747e",
-  "email": "user@example.com",
-  "fullName": "Ahmed Hassan"
-}
-```
-
-**Error Responses:**
-- `400` — Validation errors (weak password, missing fields)
-- `409` — Email already registered
-
-**Password Requirements:**
-- Minimum 6 characters
-- At least 1 uppercase, 1 lowercase, 1 digit, 1 special character
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `ConnectionStrings:DefaultConnection` | SQL Server connection string | ✅ Yes |
+| `Jwt:Key` | Secret key for signing JWT tokens (≥ 32 chars) | ✅ Yes |
+| `Jwt:Issuer` | JWT token issuer claim | ✅ Yes |
+| `Jwt:Audience` | JWT token audience claim | ✅ Yes |
 
 ---
 
-#### `POST /api/auth/login`
+## 📂 Project Structure
 
-Authenticates an existing user.
+```
+Back-End/
+├── Web/                        # Presentation Layer (HTTP)
+│   ├── Controllers/            # API endpoints per feature
+│   │   ├── AuthController.cs
+│   │   ├── DashboardController.cs
+│   │   ├── TransactionsController.cs
+│   │   ├── SubscriptionsController.cs
+│   │   ├── AccountsController.cs
+│   │   ├── AnalyticsController.cs
+│   │   └── ChatbotController.cs
+│   ├── Configurations/         # Swagger, CORS, Auth setup
+│   └── Middleware/             # Global error handling
+│
+├── Application/                # Business Logic Layer
+│   ├── DTOs/                   # Data Transfer Objects (Request/Response)
+│   ├── Interfaces/             # Service contracts (IAuthService, etc.)
+│   └── Services/               # Concrete service implementations
+│
+├── Domain/                     # Core Domain Layer (no dependencies)
+│   ├── Entities/               # EF Core entity models (User, Transaction, etc.)
+│   └── Enums/                  # Domain enumerations
+│
+├── Infrastructure/             # Data Access Layer
+│   └── (EF Core DbContext, Repositories)
+│
+├── Migrations/                 # EF Core migration files
+├── Program.cs                  # App bootstrap, DI container configuration
+├── appsettings.json            # Default configuration
+└── openapi.yaml                # Full OpenAPI specification
+```
 
-**Request Body:**
+---
+
+## 📡 API Documentation
+
+Base URL: `http://baseera.runasp.net/api`
+
+All protected endpoints require the header:
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+### 🔐 Authentication
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/Auth/register` | ❌ | Register a new user account |
+| `POST` | `/Auth/login` | ❌ | Login and receive a JWT token |
+
+**Login Request Body:**
 ```json
 {
   "email": "demo@baseera.com",
@@ -222,623 +150,70 @@ Authenticates an existing user.
 }
 ```
 
-**Response (200):**
+**Login Response:**
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "expiration": "2026-04-30T12:00:00Z",
-  "userId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "email": "demo@baseera.com",
-  "fullName": "Ahmed Hassan"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresAt": "2026-05-02T12:00:00Z"
 }
-```
-
-**Error Responses:**
-- `401` — Invalid email or password
-
----
-
-### 2. Accounts
-
-> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
-
-#### `GET /api/accounts`
-
-Returns all financial accounts for the authenticated user.
-
-**Response (200):**
-```json
-[
-  {
-    "id": "11111111-1111-1111-1111-111111111111",
-    "providerName": "CIB",
-    "providerType": "Bank",
-    "balance": 18500.75
-  },
-  {
-    "id": "22222222-2222-2222-2222-222222222222",
-    "providerName": "Vodafone Cash",
-    "providerType": "EWallet",
-    "balance": 3200.00
-  }
-]
 ```
 
 ---
 
-#### `POST /api/accounts`
+### 📊 Dashboard
 
-Links a new financial account to the user. The initial balance is fetched from the (mocked) provider.
-
-**Request Body:**
-```json
-{
-  "providerName": "Al Rajhi Bank",
-  "providerType": "Bank"
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "33333333-3333-3333-3333-333333333333",
-  "providerName": "Al Rajhi Bank",
-  "providerType": "Bank",
-  "balance": 24350.75
-}
-```
-
-**Valid provider types:** `Bank`, `EWallet`, `HardCash`
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/Dashboard` | ✅ | Get dashboard summary (liquidity, KPIs, budgets, recent transactions) |
 
 ---
 
-#### `POST /api/accounts/sync`
+### 💸 Transactions
 
-Syncs transactions from the mocked Open Banking API. **Also triggers subscription detection** after sync.
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/Transactions` | ✅ | Get paginated list of user transactions |
+| `POST` | `/Transactions` | ✅ | Create a manual transaction |
+| `PATCH` | `/Transactions/{id}/status` | ✅ | Update transaction status (Pending → Confirmed) |
+| `POST` | `/Transactions/ocr` | ✅ | Upload a receipt image for AI-powered data extraction |
 
-**Request Body:**
+**Create Transaction Request Body:**
 ```json
 {
-  "accountId": "11111111-1111-1111-1111-111111111111"
-}
-```
-
-**Response (200):**
-```json
-{
-  "message": "Synced 10 transactions. Detected 4 new subscriptions.",
-  "transactionsSynced": 10,
-  "subscriptionsDetected": 4
-}
-```
-
-**Error Responses:**
-- `404` — Account not found or doesn't belong to user
-
-**What happens internally:**
-1. Reads transactions from `MockData/mock_transactions.json`
-2. Saves them to the database linked to the specified account
-3. Runs the **Subscription Engine** to detect recurring payments
-4. Returns count of synced transactions and newly detected subscriptions
-
----
-
-### 3. Transactions
-
-> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
-
-#### `GET /api/transactions`
-
-Returns paginated transaction history (newest first).
-
-**Query Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | int | 1 | Page number |
-| `pageSize` | int | 50 | Items per page |
-
-**Example:** `GET /api/transactions?page=1&pageSize=10`
-
-**Response (200):**
-```json
-[
-  {
-    "id": "7bad7b31-e7a5-4d37-b124-7defef4cd6cb",
-    "accountId": null,
-    "amount": 175.50,
-    "merchantName": "Pizza Hut",
-    "category": "Food",
-    "source": "OCR",
-    "status": "Pending",
-    "isSubscription": false,
-    "transactionDate": "2026-04-28T18:00:00Z"
-  }
-]
-```
-
----
-
-#### `POST /api/transactions/ocr`
-
-Uploads a receipt image for AI-driven OCR processing. Creates a **Confirmed** transaction.
-
-**Request Body:** `multipart/form-data` with a `file` field.
-
-**Example (Postman/cURL):**
-```bash
-curl -X POST http://localhost:5002/api/transactions/ocr \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@receipt.jpg"
-```
-
-**Response (201):**
-```json
-{
-  "id": "7bad7b31-e7a5-4d37-b124-7defef4cd6cb",
-  "accountId": null,
-  "amount": 175.50,
-  "merchantName": "Pizza Hut",
+  "amount": 150.00,
+  "merchantName": "Starbucks",
   "category": "Food",
-  "source": "OCR",
-  "status": "Confirmed",
-  "isSubscription": false,
-  "transactionDate": "2026-04-28T18:00:00Z"
-}
-```
-
-**Notes:**
-- `accountId` is usually `null` for OCR transactions
-- `source` is automatically set to `"OCR"`
-- `status` is automatically set to `"Confirmed"`
-
----
-
-#### `POST /api/transactions/manual`
-
-Creates a manual transaction. Creates a **Confirmed** transaction.
-
-**Request Body:**
-```json
-{
-  "amount": 50.00,
-  "title": "Coffee",
-  "category": "Food & Drink",
-  "transactionDate": "2026-04-30T10:00:00Z"
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "8c9b5a32-1e4b-4a5c-8d12-9b2f4c5e6a7b",
-  "accountId": null,
-  "amount": 50.00,
-  "merchantName": "Coffee",
-  "category": "Food & Drink",
-  "source": "Manual",
-  "status": "Confirmed",
-  "isSubscription": false,
-  "transactionDate": "2026-04-30T10:00:00Z"
-}
-```
-
-**Notes:**
-- `source` is automatically set to `"Manual"`
-- `status` is automatically set to `"Confirmed"`
-- `merchantName` in the response maps to the requested `title`
-
----
-
-#### `PATCH /api/transactions/{id}/status`
-
-Updates a transaction's status (e.g., confirm or flag an OCR transaction).
-
-**Path Parameter:** `id` — Transaction GUID
-
-**Request Body:**
-```json
-{
-  "status": "Confirmed"
-}
-```
-
-**Valid status values:** `Pending`, `Confirmed`, `Flagged`
-
-**Response (200):** Returns the updated transaction object.
-
-**Error Responses:**
-- `400` — Invalid status value
-- `403` — Transaction belongs to another user
-- `404` — Transaction not found
-
----
-
-### 4. Subscriptions
-
-> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
-
-#### `GET /api/subscriptions`
-
-Returns all subscriptions. **Automatically evaluates at-risk status** before returning results.
-
-**Response (200):**
-```json
-[
-  {
-    "id": "13da9a96-5e7e-422a-af3b-121c683b3928",
-    "serviceName": "Netflix",
-    "monthlyCost": 199.99,
-    "lastPaymentDate": "2026-04-27T22:26:41Z",
-    "lastActivityDate": "2026-04-27T22:26:41Z",
-    "usageScore": 85.00,
-    "status": "Active"
-  },
-  {
-    "id": "05ff5866-574f-49e2-824d-3e156b19ab4d",
-    "serviceName": "Gold's Gym",
-    "monthlyCost": 500.00,
-    "lastPaymentDate": "2026-04-25T22:26:41Z",
-    "lastActivityDate": "2026-03-14T22:26:41Z",
-    "usageScore": 12.00,
-    "status": "AtRisk"
-  }
-]
-```
-
-**Status values:**
-| Status | Meaning |
-|--------|---------|
-| `Active` | Subscription is healthy |
-| `AtRisk` | Low usage or inactive — user should review |
-| `Cancelled` | User cancelled the subscription |
-
----
-
-#### `PATCH /api/subscriptions/{id}/cancel`
-
-Cancels a subscription (sets status to `Cancelled`).
-
-**Path Parameter:** `id` — Subscription GUID
-
-**Response (200):** Returns the updated subscription with `status: "Cancelled"`.
-
-**Error Responses:**
-- `400` — Already cancelled
-- `403` — Subscription belongs to another user
-- `404` — Subscription not found
-
----
-
-### 5. Dashboard
-
-> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
-
-#### `GET /api/dashboard`
-
-Returns a comprehensive **Financial Health Overview** for the current month.
-
-**Response (200):**
-```json
-{
-  "totalBankBalance": 18500.75,
-  "totalEWalletBalance": 3200.00,
-  "hardCashBalance": 500.00,
-  "totalLiquidity": 22200.75,
-  "totalSpendThisMonth": 8970.46,
-  "totalSubscriptionCost": 1139.96,
-  "activeSubscriptions": 5,
-  "atRiskSubscriptions": 2,
-  "atRiskSubscriptionsList": [
-    {
-      "id": "05ff5866-...",
-      "serviceName": "Gold's Gym",
-      "monthlyCost": 500.00,
-      "usageScore": 12.00,
-      "status": "AtRisk"
-    }
-  ],
-  "spendByCategory": [
-    { "category": "Shopping", "amount": 3950.00 },
-    { "category": "Utilities", "amount": 1800.00 },
-    { "category": "Groceries", "amount": 1250.00 }
-  ]
-}
-```
-
-**What's calculated:**
-- `totalBankBalance` / `totalEWalletBalance` / `hardCashBalance` — Sum of balances by provider type
-- `totalLiquidity` — Sum of all account balances
-- `totalSpendThisMonth` — Sum of all transactions from the 1st of the current month
-- `totalSubscriptionCost` — Sum of all non-cancelled subscription costs
-- `spendByCategory` — Aggregated spending grouped by category, sorted descending
-
----
-
-### 6. Analytics
-
-> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
-
-#### `GET /api/analytics/summary`
-
-Returns an aggregation of total spending grouped by Category for the current user.
-
-**Response (200):**
-```json
-[
-  { "category": "Shopping", "amount": 3950.00 },
-  { "category": "Utilities", "amount": 1800.00 },
-  { "category": "Groceries", "amount": 1250.00 }
-]
-```
-
----
-
-### 7. Chatbot
-
-> 🔒 **Requires Authentication** | **Rate Limit**: `UserRateLimit` — 40 requests/minute per user
-
-#### `POST /api/chatbot/message`
-
-Sends a message to the AI Chatbot and returns a text reply along with chart data.
-
-**Request Body:**
-```json
-{
-  "message": "How much did I spend on Uber?"
-}
-```
-
-**Response (200):**
-```json
-{
-  "textReply": "You spent $250.00 on Uber/Transport.",
-  "chartData": {
-    "labels": ["Uber/Transport", "Other Spend"],
-    "values": [250.00, 1000.00]
-  }
+  "transactionDate": "2026-05-01T18:00:00Z"
 }
 ```
 
 ---
 
-## Business Logic
+### 💳 Subscriptions
 
-### Subscription Detection (Implicit Linking)
-
-The **SubscriptionEngine** scans transactions to find recurring payment patterns.
-
-```
-Transactions → Normalize Merchant Names → Group by Name → ≥2 in 90 days? → Subscription!
-```
-
-**How it works:**
-
-1. **Normalize merchant names** — lowercase, strip `.com/.eg`, remove punctuation
-   ```
-   "NETFLIX.COM"      → "netflix"
-   "Netflix Inc"      → "netflix"
-   "SPOTIFY AB"       → "spotify"
-   "Gold's Gym"       → "golds gym"
-   "GOLDS GYM CAIRO"  → "golds gym"
-   ```
-
-2. **Match against known services** — a built-in dictionary maps normalized names to canonical service names:
-   ```
-   "netflix"  → "Netflix"
-   "spotify"  → "Spotify"
-   "gold"     → "Gold's Gym"
-   "adobe"    → "Adobe Creative Cloud"
-   "linkedin" → "LinkedIn Premium"
-   ```
-
-3. **Group and detect** — if a normalized merchant appears **≥2 times in the last 90 days**, it's flagged as a subscription
-
-4. **Create/update records** — creates `Subscription` entries and marks matching `Transaction.IsSubscription = true`
-
-**Trigger:** Subscription detection runs automatically after every bank sync (`POST /api/accounts/sync`).
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/Subscriptions` | ✅ | Get all user subscriptions with risk analysis |
+| `POST` | `/Subscriptions` | ✅ | Add a new subscription |
+| `DELETE` | `/Subscriptions/{id}` | ✅ | Remove a subscription |
 
 ---
 
-### At-Risk Detection
+### 🏦 Accounts
 
-The **FinancialInsightsService** evaluates subscriptions and flags those that may be unused.
-
-**A subscription is flagged as `AtRisk` if either:**
-
-| Rule | Condition |
-|------|-----------|
-| Low usage | `UsageScore < 20` |
-| Inactive | `CurrentDate - LastActivityDate > 30 days` |
-
-**Trigger:** At-risk evaluation runs automatically when:
-- `GET /api/subscriptions` is called
-- `GET /api/dashboard` is called
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/Accounts` | ✅ | Get all linked bank/wallet accounts |
+| `POST` | `/Accounts` | ✅ | Link a new account |
 
 ---
 
-### OCR Processing
+### 📈 Analytics
 
-The **OCRService** receives AI-extracted bill data from a mobile app's camera/OCR feature.
-
-**Flow:**
-```
-Mobile App → Camera → AI/OCR → Extract {amount, merchant, date} → POST /api/transactions/ocr
-                                                                         ↓
-                                                                  Saved as "Pending"
-                                                                         ↓
-                                                              User reviews & confirms
-                                                                         ↓
-                                                            PATCH /api/transactions/{id}/status
-                                                              { "status": "Confirmed" }
-```
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/Analytics` | ✅ | Get spending breakdown and trends for charts |
 
 ---
 
-## Data Models
-
-### ApplicationUser (extends IdentityUser)
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | string | Identity primary key |
-| FirstName | string(100) | User's first name |
-| LastName | string(100) | User's last name |
-| Email | string | Login email & primary identifier |
-
-### Account
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | string | Primary key |
-| UserId | string | Owner reference |
-| ProviderName | string(150) | e.g., "CIB", "Vodafone Cash" |
-| ProviderType | Enum | `Bank` | `EWallet` | `HardCash` |
-| Balance | decimal(18,2) | Current balance |
-
-### Transaction
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | string | Primary key |
-| UserId | string | Owner reference |
-| AccountId | string? | Nullable — null for OCR/cash |
-| Amount | decimal(18,2) | Transaction amount |
-| MerchantName | string(250) | Merchant/vendor name |
-| Category | string(100) | e.g., "Groceries", "Entertainment" |
-| Source | string(20) | `Bank` | `OCR` | `Manual` |
-| Status | string(20) | `Pending` | `Confirmed` | `Flagged` |
-| RawAiData | nvarchar(max) | Raw JSON from AI/OCR |
-| IsSubscription | bool | Flagged by SubscriptionEngine |
-| TransactionDate | DateTime | When the transaction occurred |
-
-### Subscription
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | string | Primary key |
-| UserId | string | Owner reference |
-| ServiceName | string(200) | Canonical service name |
-| MonthlyCost | decimal(18,2) | Average monthly cost |
-| LastPaymentDate | DateTime | Most recent payment |
-| LastActivityDate | DateTime? | Last usage (for AI tracking) |
-| UsageScore | decimal(18,2) | 0–100 (below 20 = AtRisk) |
-| Status | string(20) | `Active` | `AtRisk` | `Cancelled` |
-
----
-
-## Rate Limiting
-
-Two policies protect the API from abuse:
-
-| Policy | Scope | Limit | Window | Applied To |
-|--------|-------|-------|--------|-----------|
-| `IpRateLimit` | Per IP address | 5 requests | 1 minute (sliding) | Auth endpoints |
-| `UserRateLimit` | Per authenticated user | 40 requests | 1 minute (sliding) | All financial endpoints |
-
-**When rate-limited (429):**
-```json
-{
-  "error": "Too many requests. Please check the Retry-After header."
-}
-```
-
-The `Retry-After` response header indicates how many seconds to wait.
-
----
-
-## Seed Data
-
-On first startup, the database is seeded with demo data:
-
-**User:** Ahmed Hassan (`demo@baseera.com` / `Demo@123`)
-
-**Accounts:**
-| Provider | Type | Balance | ID |
-|----------|------|---------|-----|
-| CIB | Bank | 18,500.75 | `1111...` |
-| Vodafone Cash | EWallet | 3,200.00 | `2222...` |
-| Wallet | HardCash | 500.00 | `3333...` |
-
-**Transactions:** 23 diverse transactions including:
-- **Recurring:** Netflix (×3), Spotify (×3), Gold's Gym (×3), Adobe (×2), LinkedIn (×2)
-- **One-off:** Carrefour, Uber, Zara, Amazon, Electricity, etc.
-- **OCR:** 1 pending transaction from "Street Vendor"
-
-**Subscriptions:**
-| Service | Cost/mo | Usage Score | Status |
-|---------|---------|-------------|--------|
-| Netflix | 199.99 | 85 | Active |
-| Spotify | 49.99 | 72 | Active |
-| Gold's Gym | 500.00 | 12 | AtRisk ⚠️ |
-| Adobe Creative Cloud | 239.99 | 8 | AtRisk ⚠️ |
-| LinkedIn Premium | 149.99 | 45 | Active |
-
----
-
-## Configuration
-
-### Connection String (`appsettings.json`)
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=Baseera;Integrated Security=SSPI;TrustServerCertificate=True;"
-  }
-}
-```
-
-### JWT Settings
-
-```json
-{
-  "Jwt": {
-    "Key": "<your-secret-key-min-32-chars>",
-    "Issuer": "Baseera.Api",
-    "Audience": "Baseera.Client"
-  }
-}
-```
-
-> ⚠️ **Never commit the JWT key to source control.** Use environment variables or user secrets in production.
-
----
-
-## Error Handling
-
-All errors return structured JSON:
-
-```json
-{
-  "status": 500,
-  "message": "An unexpected error occurred. Please try again later.",
-  "timestamp": "2026-04-28T22:00:00Z"
-}
-```
-
-| Status | Meaning |
-|--------|---------|
-| 400 | Bad Request — validation failure |
-| 401 | Unauthorized — missing or invalid JWT |
-| 403 | Forbidden — resource belongs to another user |
-| 404 | Not Found — resource doesn't exist |
-| 409 | Conflict — duplicate resource (e.g., email) |
-| 429 | Too Many Requests — rate limit exceeded |
-| 500 | Internal Server Error — unexpected failure |
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Runtime | .NET 8 |
-| Database | SQL Server (LocalDB) |
-| ORM | Entity Framework Core 8 |
-| Auth | ASP.NET Core Identity + JWT Bearer |
-| API Docs | Swagger / Swashbuckle 6.9 |
-| Rate Limiting | .NET 8 built-in RateLimiter |
-
----
-
-*Built for the FinTech Hackathon by the Baseera Team* 🚀
+> 📄 For the full OpenAPI specification, see [`openapi.yaml`](./openapi.yaml) or visit `/swagger` on a running instance.

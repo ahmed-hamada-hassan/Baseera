@@ -83,6 +83,14 @@ export const UpdateTransactionStatusSchema = z.object({
 });
 export type UpdateTransactionStatus = z.infer<typeof UpdateTransactionStatusSchema>;
 
+export const CreateTransactionRequestSchema = z.object({
+  amount: z.number().positive(),
+  merchantName: z.string().min(1),
+  category: z.string(),
+  transactionDate: z.string().datetime({ offset: true }),
+});
+export type CreateTransactionRequest = z.infer<typeof CreateTransactionRequestSchema>;
+
 // ── Subscriptions ─────────────────────────────────────────────────────
 
 export const SubscriptionStatusSchema = z.enum(['Active', 'AtRisk', 'Cancelled']);

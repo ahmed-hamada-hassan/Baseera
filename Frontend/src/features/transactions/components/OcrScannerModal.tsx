@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ScanLine, FileText, Camera } from 'lucide-react';
-import { useSubmitOcr } from '../hooks/useTransactions';
+import { useSubmitOcr, useCreateTransaction } from '../hooks/useTransactions';
 import { toast } from 'sonner';
 
 interface OcrScannerModalProps {
@@ -40,20 +40,36 @@ export function OcrScannerModal({ isOpen, onClose }: OcrScannerModalProps) {
     }
   };
 
+  const { mutate: createTransaction } = useCreateTransaction();
+
   const handleScan = () => {
     if (!file) return;
     submitOcr(file, {
       onSuccess: (data) => {
         if (data && data.amount) {
-           toast.success(`تم استخراج الإيصال بنجاح!`, {
-             description: `المبلغ: ${data.amount} ريال - التاجر: ${data.merchantName || 'غير محدد'}`,
+           // Auto-save the OCR result as a confirmed transaction for the demo
+           createTransaction({
+             amount: data.amount,
+             merchantName: data.merchantName || 'تاجر غير محدد',
+             category: data.category || 'Other',
+             transactionDate: new Date().toISOString()
+           }, {
+             onSuccess: () => {
+               toast.success(`تم استخراج وحفظ الإيصال بنجاح!`, {
+                 description: `المبلغ: ${data.amount} ج.م - التاجر: ${data.merchantName || 'غير محدد'}`,
+               });
+               setTimeout(() => onClose(), 1000);
+             },
+             onError: (error: any) => {
+               console.error("Create Tx Error:", error?.response?.data || error);
+               const errorMsg = error?.response?.data?.title || error?.response?.data?.message || JSON.stringify(error?.response?.data) || 'فشل الحفظ في قاعدة البيانات.';
+               toast.error(`تم الاستخراج ولكن: ${errorMsg}`);
+             }
            });
         } else {
-           toast.success(`تم استخراج الإيصال بنجاح!`);
+           toast.success(`تم الاستخراج ولكن لم يتم العثور على مبلغ!`);
+           setTimeout(() => onClose(), 1000);
         }
-        setTimeout(() => {
-          onClose();
-        }, 1000);
       },
       onError: () => {
         toast.error('حدث خطأ أثناء تحليل الإيصال، يرجى المحاولة مرة أخرى.');

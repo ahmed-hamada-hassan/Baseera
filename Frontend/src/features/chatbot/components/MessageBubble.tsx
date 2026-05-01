@@ -6,6 +6,7 @@
 import { useMemo } from 'react';
 import type { Message } from '@/shared/lib/schemas/chat.schema';
 import ReactMarkdown from 'react-markdown';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import { useTypingEffect } from '../hooks/useTypingEffect';
 
 interface MessageBubbleProps {
@@ -13,27 +14,46 @@ interface MessageBubbleProps {
   isLatest: boolean;
 }
 
-export function MessageBubble({ message, isLatest }: MessageBubbleProps) {
-  const isUser = message.role === 'user';
-  
-  // Apply typing effect only to the latest assistant message
-  const shouldAnimate = !isUser && isLatest && !message.isStreaming;
-  const { displayedText } = useTypingEffect(message.content, shouldAnimate ? 15 : 0);
-  const textToShow = shouldAnimate ? displayedText : message.content;
+interface ChartDataItem {
+  name: string;
+  value: number;
+}
 
-  // Try to parse JSON to detect "Wow Factor" Charts
-  const parsedChartData = useMemo(() => {
-    if (isUser) return null;
+function parseChatMessage(content: string): { pureText: string; chartData: ChartDataItem[] | null } {
+  const trimmed = content.trim();
+  const jsonMatch = trimmed.match(/\{[\s\n]*"type"[\s\n]*:[\s\n]*"chart"[\s\n]*,[\s\S]*\}$/);
+  
+  if (jsonMatch) {
     try {
-      const parsed = JSON.parse(textToShow);
+      const parsed = JSON.parse(jsonMatch[0]);
       if (parsed && parsed.type === 'chart' && Array.isArray(parsed.data)) {
-        return parsed.data;
+        return { 
+          pureText: content.substring(0, jsonMatch.index).trim(), 
+          chartData: parsed.data as ChartDataItem[]
+        };
       }
     } catch {
-      // Not valid JSON, which is fine (normal markdown text)
+      // Ignore
     }
-    return null;
-  }, [textToShow, isUser]);
+  }
+  return { pureText: content, chartData: null };
+}
+
+export function MessageBubble({ message, isLatest }: MessageBubbleProps) {
+  const isUser = message.role === 'user';
+  const shouldAnimate = !isUser && isLatest && !message.isStreaming;
+  
+  // Separate text and JSON to avoid typing out the JSON block
+  const { pureText, chartData } = useMemo(() => parseChatMessage(message.content), [message.content]);
+
+  // Apply typing effect ONLY to the pure text part
+  const { displayedText } = useTypingEffect(pureText, shouldAnimate ? 15 : 0);
+  const textToShow = shouldAnimate ? displayedText : pureText;
+  
+  // Only show chart after typing is done
+  const isTypingDone = !shouldAnimate || displayedText.length >= pureText.length;
+
+  const COLORS = ['#8B5CF6', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#EC4899', '#6366F1', '#14B8A6'];
 
   return (
     <div
@@ -47,30 +67,35 @@ export function MessageBubble({ message, isLatest }: MessageBubbleProps) {
             : 'bg-white text-[#1E293B] border border-slate-100 border-r-4 border-r-[#8B5CF6] rounded-2xl rounded-tl-sm'
         }`}
       >
-        {parsedChartData ? (
-          <div className="w-full h-40 mt-2">
-            <p className="text-xs text-slate-500 mb-4 font-semibold text-center">توزيع النفقات الرئيسية</p>
-            
-            {/* Simple mock of the bar/percentages from the screenshot for a better visual match */}
-            <div className="flex justify-between items-end h-24 mb-2">
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-[#8B5CF6] font-bold text-sm">40%</span>
-                <span className="text-xs text-slate-500 font-medium">الترفيه</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-slate-400 font-bold text-sm">30%</span>
-                <span className="text-xs text-slate-500 font-medium">السكن</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-slate-400 font-bold text-sm">20%</span>
-                <span className="text-xs text-slate-500 font-medium">الطعام</span>
-              </div>
-            </div>
-            
-          </div>
-        ) : (
-          <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'prose-slate'}`}>
-            <ReactMarkdown>{textToShow}</ReactMarkdown>
+        <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert text-white' : 'prose-slate text-[#1E293B]'}`}>
+          <ReactMarkdown>{textToShow}</ReactMarkdown>
+        </div>
+
+        {chartData && isTypingDone && (
+          <div className="w-full h-56 mt-4 pt-4 border-t border-slate-100">
+            <p className="text-[10px] text-slate-400 mb-4 font-bold text-center uppercase tracking-wider">تحليل توزيع النفقات</p>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} layout="vertical" margin={{ left: -20, right: 20, top: 0, bottom: 0 }}>
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  tick={{ fontSize: 10, fill: '#64748B', fontWeight: 500 }}
+                  width={80}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'transparent' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                  {chartData.map((_entry: ChartDataItem, index: number) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length] || '#8B5CF6'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </div>

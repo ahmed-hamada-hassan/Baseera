@@ -4,8 +4,6 @@
 
 import apiClient, { tokenService } from '@/shared/lib/axios';
 import {
-  AiResponseSchema,
-  type AiResponse,
   type SendMessageRequest,
   type ChatSession,
   ChatSessionSchema,
@@ -30,7 +28,7 @@ export const chatbotApi = {
       try {
         const error = await response.json();
         errorDetail = error.detail || errorDetail;
-      } catch (e) {
+      } catch {
         // Ignore json parse error
       }
       throw new Error(errorDetail);

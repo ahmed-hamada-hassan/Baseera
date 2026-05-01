@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { 
   TransactionSchema, 
   type Transaction, 
-  type TransactionStatus 
+  type TransactionStatus,
+  type CreateTransactionRequest,
 } from '@/shared/lib/schemas/openapi.schema';
 
 const TransactionArraySchema = z.array(TransactionSchema);
@@ -61,6 +62,13 @@ export const transactionsApi = {
 
   updateTransactionStatus: async (id: string, status: TransactionStatus): Promise<Transaction> => {
     const { data } = await apiClient.patch(`/Transactions/${id}/status`, { status });
+    const result = TransactionSchema.safeParse(data);
+    if (!result.success) return data as Transaction;
+    return result.data;
+  },
+
+  createTransaction: async (payload: CreateTransactionRequest): Promise<Transaction> => {
+    const { data } = await apiClient.post('/Transactions', payload);
     const result = TransactionSchema.safeParse(data);
     if (!result.success) return data as Transaction;
     return result.data;
