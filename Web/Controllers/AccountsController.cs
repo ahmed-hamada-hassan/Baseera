@@ -41,10 +41,41 @@ public class AccountsController : ControllerBase
         {
             Id = a.Id,
             ProviderName = a.ProviderName,
-            Balance = a.Balance
+            Balance = a.Balance,
+            ProviderType = a.ProviderType.ToString()
         });
 
         return Ok(dtos);
+    }
+
+    /// <summary>
+    /// Add a new Bank Account or E-wallet.
+    /// </summary>
+    [HttpPost]
+    public async Task<IActionResult> CreateAccount([FromBody] CreateAccountDto dto)
+    {
+        var userId = GetUserId();
+
+        // Fetch balance from bank/e-wallet (Mocked integration)
+        var balance = await _bankSyncService.GetAccountBalanceAsync(dto.ProviderName, dto.ProviderType);
+
+        var account = new Domain.Entities.Account
+        {
+            UserId = userId,
+            ProviderName = dto.ProviderName,
+            Balance = balance,
+            ProviderType = dto.ProviderType
+        };
+
+        await _accountRepo.AddAsync(account);
+
+        return CreatedAtAction(nameof(GetAccounts), new { id = account.Id }, new AccountDto
+        {
+            Id = account.Id,
+            ProviderName = account.ProviderName,
+            Balance = account.Balance,
+            ProviderType = account.ProviderType.ToString()
+        });
     }
 
     /// <summary>
@@ -73,10 +104,10 @@ public class AccountsController : ControllerBase
         });
     }
 
-    private Guid GetUserId()
+    private string GetUserId()
     {
         var userIdClaim = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
                        ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(userIdClaim!);
+        return userIdClaim!;
     }
 }

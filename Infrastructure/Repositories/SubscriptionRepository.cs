@@ -14,7 +14,7 @@ public class SubscriptionRepository : ISubscriptionRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Subscription>> GetByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<Subscription>> GetByUserIdAsync(string userId)
     {
         return await _context.Subscriptions
             .Where(s => s.UserId == userId)
@@ -22,12 +22,12 @@ public class SubscriptionRepository : ISubscriptionRepository
             .ToListAsync();
     }
 
-    public async Task<Subscription?> GetByIdAsync(Guid id)
+    public async Task<Subscription?> GetByIdAsync(string id)
     {
         return await _context.Subscriptions.FindAsync(id);
     }
 
-    public async Task<Subscription?> GetByServiceNameAsync(Guid userId, string serviceName)
+    public async Task<Subscription?> GetByServiceNameAsync(string userId, string serviceName)
     {
         var normalized = serviceName.Trim().ToLowerInvariant();
         return await _context.Subscriptions
@@ -47,7 +47,7 @@ public class SubscriptionRepository : ISubscriptionRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Subscription>> GetAtRiskAsync(Guid userId)
+    public async Task<IEnumerable<Subscription>> GetAtRiskAsync(string userId)
     {
         return await _context.Subscriptions
             .Where(s => s.UserId == userId && s.Status == "AtRisk")

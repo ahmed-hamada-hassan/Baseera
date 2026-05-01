@@ -8,14 +8,14 @@ namespace Baseera.Api.Domain.Entities;
 /// </summary>
 public class Transaction
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     /// <summary>
     /// Nullable — cash/OCR transactions may not belong to a specific account.
     /// </summary>
-    public Guid? AccountId { get; set; }
+    public string? AccountId { get; set; }
 
     public decimal Amount { get; set; }
 

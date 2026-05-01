@@ -13,7 +13,7 @@ public class AccountRepository : IAccountRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Account>> GetByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<Account>> GetByUserIdAsync(string userId)
     {
         return await _context.Accounts
             .Where(a => a.UserId == userId)
@@ -21,7 +21,7 @@ public class AccountRepository : IAccountRepository
             .ToListAsync();
     }
 
-    public async Task<Account?> GetByIdAsync(Guid id)
+    public async Task<Account?> GetByIdAsync(string id)
     {
         return await _context.Accounts.FindAsync(id);
     }

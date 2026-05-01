@@ -17,3 +17,6 @@ desktop.ini
 
 ## Optional: Local settings
 appsettings.Development.json
+
+## AI Planning
+implementation_plan.md

@@ -6,8 +6,8 @@
 #         3. Run the protected endpoints.
 ###############################################################################
 
-@host = https://localhost:7181
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJlbWFpbCI6ImRlbW9AYmFzZWVyYS5jb20iLCJqdGkiOiIwYjFhY2UxYy0zNGRjLTQ5M2QtOTEwMy00MThiMTk5NWNjN2YiLCJmaXJzdE5hbWUiOiJBaG1lZCIsImxhc3ROYW1lIjoiSGFzc2FuIiwiZXhwIjoxNzc3NTQyNjQ1LCJpc3MiOiJCYXNlZXJhLkFwaSIsImF1ZCI6IkJhc2VlcmEuQ2xpZW50In0.R0_z5BABC03pB0VYtVGY2z9_K9u5FxoVJ5mzhR4-hmE
+@host = http://localhost:5002
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IkFDQy0wMDEiLCJqdGkiOiI1YWRiM2NkMi00ZTczLTQ1MTgtOGRmMy05NzAzYmUwZGZlNGEiLCJmaXJzdE5hbWUiOiJBaG1lZCIsImxhc3ROYW1lIjoiSGFzc2FuIiwiZXhwIjoxNzc3NzE0NjEwLCJpc3MiOiJCYXNlZXJhLkFwaSIsImF1ZCI6IkJhc2VlcmEuQ2xpZW50In0.Vig80boCy5M_Cp5T_xHz-VGAi-lK3TlkR7uIl7T0vxc
 
 ###############################################################################
 # ═══════════════════════════════ AUTH ═══════════════════════════════════════
@@ -18,11 +18,10 @@ POST {{host}}/api/Auth/register
 Content-Type: application/json
 
 {
-  "email": "demo@b.com",
+  "email": "jane@baseera.com",
   "password": "P@ssw0rd!",
-  "firstName": "Ahmed",
-  "lastName": "Hassan",
-  "monthlyIncome": 15000.00
+  "firstName": "Jane",
+  "lastName": "Doe"
 }
 
 ###
@@ -33,7 +32,7 @@ Content-Type: application/json
 
 {
   "email": "demo@baseera.com",
-  "password": "P@ssw0rd!"
+  "password": "Demo@123"
 }
 
 ###############################################################################
@@ -44,6 +43,30 @@ Content-Type: application/json
 GET {{host}}/api/Accounts
 Accept: application/json
 Authorization: Bearer {{token}}
+
+###
+
+### Add a new Bank Account
+POST {{host}}/api/Accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "providerName": "CIB Bank",
+  "providerType": 0
+}
+
+###
+
+### Add a new E-wallet
+POST {{host}}/api/Accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "providerName": "Vodafone Cash",
+  "providerType": 1
+}
 
 ###
 

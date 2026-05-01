@@ -24,7 +24,7 @@ public class BankSyncService : IBankSyncService
         _logger = logger;
     }
 
-    public async Task<int> SyncTransactionsAsync(Guid userId, Guid accountId)
+    public async Task<int> SyncTransactionsAsync(string userId, string accountId)
     {
         var filePath = Path.Combine(_env.ContentRootPath, "MockData", "mock_transactions.json");
 
@@ -61,6 +61,22 @@ public class BankSyncService : IBankSyncService
         _logger.LogInformation("Synced {Count} transactions for user {UserId}", transactions.Count, userId);
 
         return transactions.Count;
+    }
+
+    public async Task<decimal> GetAccountBalanceAsync(string providerName, ProviderType providerType)
+    {
+        // Mocking a delay to simulate network call
+        await Task.Delay(500);
+
+        // Return a deterministic mock balance based on the provider name
+        return providerName.ToLower() switch
+        {
+            "cib" or "cib bank" => 25450.75m,
+            "qnb" or "qnb bank" => 12800.00m,
+            "vodafone cash" => 4200.50m,
+            "instapay" => 1500.00m,
+            _ => new Random().Next(1000, 50000) / 1.0m // Random balance if provider unknown
+        };
     }
 
     private class MockTransaction

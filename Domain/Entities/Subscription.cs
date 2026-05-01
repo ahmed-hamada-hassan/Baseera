@@ -8,9 +8,9 @@ namespace Baseera.Api.Domain.Entities;
 /// </summary>
 public class Subscription
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(200)]

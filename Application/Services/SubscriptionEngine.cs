@@ -41,7 +41,7 @@ public class SubscriptionEngine : ISubscriptionEngine
         _logger = logger;
     }
 
-    public async Task<int> DetectSubscriptionsAsync(Guid userId)
+    public async Task<int> DetectSubscriptionsAsync(string userId)
     {
         var cutoff = DateTime.UtcNow.AddDays(-90);
         var transactions = await _transactionRepo.GetByUserIdAndDateRangeAsync(userId, cutoff, DateTime.UtcNow);

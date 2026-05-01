@@ -1,3 +1,4 @@
+using Baseera.Api.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Baseera.Api.Application.DTOs;
@@ -8,6 +9,7 @@ public class RegisterDto
 {
     [Required]
     [EmailAddress]
+    [MaxLength(150)]
     public string Email { get; set; } = string.Empty;
 
     [Required]
@@ -21,18 +23,13 @@ public class RegisterDto
     [Required]
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Set during onboarding — used for budget calculations.
-    /// </summary>
-    [Range(0, double.MaxValue)]
-    public decimal MonthlyIncome { get; set; }
 }
 
 public class LoginDto
 {
     [Required]
     [EmailAddress]
+    [MaxLength(150)]
     public string Email { get; set; } = string.Empty;
 
     [Required]
@@ -52,23 +49,34 @@ public class AuthResponseDto
 
 public class AccountDto
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string ProviderName { get; set; } = string.Empty;
     public decimal Balance { get; set; }
+    public string ProviderType { get; set; } = string.Empty;
+}
+
+public class CreateAccountDto
+{
+    [Required]
+    [MaxLength(150)]
+    public string ProviderName { get; set; } = string.Empty;
+
+    [Required]
+    public ProviderType ProviderType { get; set; }
 }
 
 public class SyncRequestDto
 {
     [Required]
-    public Guid AccountId { get; set; }
+    public string AccountId { get; set; } = string.Empty;
 }
 
 // ── Transaction DTOs ─────────────────────────────────────────────────────
 
 public class TransactionDto
 {
-    public Guid Id { get; set; }
-    public Guid? AccountId { get; set; }
+    public string Id { get; set; } = string.Empty;
+    public string? AccountId { get; set; }
     public decimal Amount { get; set; }
     public string MerchantName { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
@@ -110,6 +118,8 @@ public class UpdateTransactionStatusDto
 
 public class ManualTransactionDto
 {
+    public string? AccountId { get; set; }
+
     [Required]
     public decimal Amount { get; set; }
 
@@ -127,7 +137,7 @@ public class ManualTransactionDto
 
 public class SubscriptionDto
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string ServiceName { get; set; } = string.Empty;
     public decimal MonthlyCost { get; set; }
     public DateTime LastPaymentDate { get; set; }
@@ -140,9 +150,11 @@ public class SubscriptionDto
 
 public class DashboardDto
 {
-    public decimal MonthlyIncome { get; set; }
+    public decimal TotalBankBalance { get; set; }
+    public decimal TotalEWalletBalance { get; set; }
+    public decimal HardCashBalance { get; set; }
+    public decimal TotalLiquidity { get; set; }
     public decimal TotalSpendThisMonth { get; set; }
-    public decimal RemainingBudget { get; set; }
     public decimal TotalSubscriptionCost { get; set; }
     public int ActiveSubscriptions { get; set; }
     public int AtRiskSubscriptions { get; set; }

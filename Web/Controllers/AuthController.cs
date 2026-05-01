@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Baseera.Api.Application.DTOs;
 using Baseera.Api.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -36,15 +37,14 @@ public class AuthController : ControllerBase
 
         var existingUser = await _userManager.FindByEmailAsync(dto.Email);
         if (existingUser != null)
-            return Conflict(new { message = "A user with this email already exists." });
+            return Conflict(new { message = "A user with this Email already exists." });
 
         var user = new ApplicationUser
         {
             UserName = dto.Email,
             Email = dto.Email,
             FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            MonthlyIncome = dto.MonthlyIncome
+            LastName = dto.LastName
         };
 
         var result = await _userManager.CreateAsync(user, dto.Password);
@@ -102,7 +102,7 @@ public class AuthController : ControllerBase
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
+            new Claim(ClaimTypes.Email, user.Email!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("firstName", user.FirstName),
             new Claim("lastName", user.LastName),

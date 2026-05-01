@@ -38,15 +38,15 @@ public class DashboardController : ControllerBase
         if (user == null)
             return NotFound(new { message = "User not found." });
 
-        var dashboard = await _insightsService.GetDashboardAsync(userId, user.MonthlyIncome);
+        var dashboard = await _insightsService.GetDashboardAsync(userId);
 
         return Ok(dashboard);
     }
 
-    private Guid GetUserId()
+    private string GetUserId()
     {
         var userIdClaim = User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)
                        ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(userIdClaim!);
+        return userIdClaim!;
     }
 }

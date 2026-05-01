@@ -77,7 +77,6 @@ paths:
               password: "P@ssw0rd!"
               firstName: Ahmed
               lastName: Hassan
-              monthlyIncome: 15000.00
       responses:
         "200":
           description: Registration successful — JWT token returned.
@@ -94,12 +93,6 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "409":
-          description: A user with this email already exists.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-              example:
                 message: A user with this email already exists.
         "429":
           $ref: "#/components/responses/TooManyRequests"
@@ -131,12 +124,6 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          description: Invalid email or password.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
-              example:
                 message: Invalid email or password.
         "429":
           $ref: "#/components/responses/TooManyRequests"
@@ -213,6 +200,35 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+    post:
+      tags: [Accounts]
+      summary: Add a new Bank Account or E-wallet
+      description: |
+        Links a new financial account to the user. The initial balance is
+        fetched from the (mocked) provider.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccount"
+            example:
+              providerName: Al Rajhi Bank
+              providerType: Bank
+      responses:
+        "201":
+          description: Account created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
   # ═══════════════════════════════ TRANSACTIONS ════════════════════════════
   /api/Transactions:
     get:
@@ -264,25 +280,23 @@ paths:
   /api/Transactions/ocr:
     post:
       tags: [Transactions]
-      summary: Submit OCR-processed bill data
+      summary: Upload receipt for OCR processing
       description: |
-        Accepts structured data extracted by the AI/OCR processor from a scanned
-        receipt or bill. Creates a new transaction with status **Pending**.
+        Accepts a receipt image (JPG/PNG), processes it via AI to extract
+        transaction details, and creates a **Confirmed** transaction.
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/OcrResult"
-            example:
-              amount: 45.99
-              merchantName: STC Fiber
-              category: Utilities
-              transactionDate: "2026-04-28T10:00:00Z"
-              rawAiData: '{"confidence": 0.95, "source": "receipt_scan"}'
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
       responses:
         "201":
-          description: Transaction created from OCR data.
+          description: Transaction created from OCR processing.
           content:
             application/json:
               schema:
@@ -345,6 +359,39 @@ paths:
                 $ref: "#/components/schemas/ErrorMessage"
               example:
                 message: Transaction not found.
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/Transactions/manual:
+    post:
+      tags: [Transactions]
+      summary: Create a manual transaction
+      description: |
+        Creates a new transaction manually. Status is automatically set to **Confirmed**.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManualTransaction"
+            example:
+              amount: 50.00
+              title: "Coffee"
+              category: "Food & Drink"
+              transactionDate: "2026-04-30T10:00:00Z"
+      responses:
+        "201":
+          description: Transaction created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "429":
           $ref: "#/components/responses/TooManyRequests"
         "500":
@@ -450,9 +497,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Dashboard"
               example:
-                monthlyIncome: 15000.00
+                totalBankBalance: 18500.75
+                totalEWalletBalance: 3200.00
+                hardCashBalance: 500.00
+                totalLiquidity: 22200.75
                 totalSpendThisMonth: 4320.50
-                remainingBudget: 10679.50
                 totalSubscriptionCost: 748.97
                 activeSubscriptions: 5
                 atRiskSubscriptions: 2
@@ -577,12 +626,6 @@ components:
           type: string
           maxLength: 100
           example: Hassan
-        monthlyIncome:
-          type: number
-          format: decimal
-          minimum: 0
-          description: Monthly income — used for budget calculations.
-          example: 15000.00
 
     LoginRequest:
       type: object
@@ -597,6 +640,15 @@ components:
           format: password
           example: "P@ssw0rd!"
 
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Bearer token (24 h expiry).
+        expiration:
+          type: string
+          format: date-time
     AuthResponse:
       type: object
       properties:
@@ -621,10 +673,12 @@ components:
       properties:
         id:
           type: string
-          format: uuid
         providerName:
           type: string
           example: Al Rajhi Bank
+        providerType:
+          type: string
+          enum: [Bank, EWallet, HardCash]
         balance:
           type: number
           format: decimal
@@ -637,6 +691,17 @@ components:
         accountId:
           type: string
           format: uuid
+
+    CreateAccount:
+      type: object
+      required: [providerName, providerType]
+      properties:
+        providerName:
+          type: string
+          maxLength: 150
+        providerType:
+          type: string
+          enum: [Bank, EWallet, HardCash]
 
     SyncResponse:
       type: object
@@ -702,6 +767,27 @@ components:
           nullable: true
           description: Raw JSON payload from the AI/OCR processor.
 
+    ManualTransaction:
+      type: object
+      required: [amount, title]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: number
+          format: decimal
+        title:
+          type: string
+          maxLength: 250
+        category:
+          type: string
+          maxLength: 100
+        transactionDate:
+          type: string
+          format: date-time
+
     UpdateTransactionStatus:
       type: object
       required: [status]
@@ -748,13 +834,19 @@ components:
     Dashboard:
       type: object
       properties:
-        monthlyIncome:
+        totalBankBalance:
+          type: number
+          format: decimal
+        totalEWalletBalance:
+          type: number
+          format: decimal
+        hardCashBalance:
+          type: number
+          format: decimal
+        totalLiquidity:
           type: number
           format: decimal
         totalSpendThisMonth:
-          type: number
-          format: decimal
-        remainingBudget:
           type: number
           format: decimal
         totalSubscriptionCost:

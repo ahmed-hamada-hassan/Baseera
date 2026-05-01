@@ -6,5 +6,5 @@ public interface ISubscriptionEngine
     /// Scans transactions and detects recurring patterns to identify subscriptions.
     /// Uses implicit linking with case-insensitive fuzzy matching.
     /// </summary>
-    Task<int> DetectSubscriptionsAsync(Guid userId);
+    Task<int> DetectSubscriptionsAsync(string userId);
 }

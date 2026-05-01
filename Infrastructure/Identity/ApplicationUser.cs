@@ -13,12 +13,9 @@ public class ApplicationUser : IdentityUser
     [MaxLength(100)]
     public string FirstName { get; set; } = string.Empty;
 
+
+
     [Required]
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// User's declared monthly income for budget calculations.
-    /// </summary>
-    public decimal MonthlyIncome { get; set; }
 }

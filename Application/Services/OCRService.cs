@@ -1,12 +1,11 @@
 using Baseera.Api.Application.DTOs;
 using Baseera.Api.Application.Interfaces;
-using Baseera.Api.Domain.Entities;
-using Baseera.Api.Domain.Enums;
+using System.Globalization;
 
 namespace Baseera.Api.Application.Services;
 
 /// <summary>
-/// Processes OCR/AI-extracted bill data.
+/// Processes OCR/AI-extracted bill data (Demo Mock implementation).
 /// </summary>
 public class OCRService : IOCRService
 {
@@ -19,19 +18,25 @@ public class OCRService : IOCRService
 
     public async Task<OcrResultDto> ProcessImageAsync(Stream imageStream)
     {
-        // Mock AI processing: In a real scenario, this would send the stream to Google Cloud Vision, Gemini, etc.
-        await Task.Delay(500); // Simulate network call
+        // Simulate processing time
+        await Task.Delay(800);
 
-        var jsonResult = "{\n  \"Amount\": 42.50,\n  \"MerchantName\": \"Coffee Shop\",\n  \"Category\": \"Food & Dining\"\n}";
+        var transactionDate = DateTime.ParseExact(
+    "25-05-2024 2:30",
+    "dd-MM-yyyy H:mm",
+    CultureInfo.InvariantCulture
+);
 
-        _logger.LogInformation("Image processed successfully.");
+        _logger.LogInformation("Processing image with mock OCR engine...");
+
+        var jsonResult = "{\n  \"Amount\": 42.50,\n  \"MerchantName\": \"Coffee Shop (Mock)\",\n  \"Category\": \"Food & Dining\"\n}";
 
         return new OcrResultDto
         {
             Amount = 42.50m,
-            MerchantName = "Coffee Shop",
+            MerchantName = "Coffee Shop (Mock)",
             Category = "Food & Dining",
-            TransactionDate = DateTime.UtcNow,
+            TransactionDate = transactionDate,
             RawAiData = jsonResult
         };
     }

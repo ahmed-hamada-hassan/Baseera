@@ -14,7 +14,7 @@ public class TransactionRepository : ITransactionRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Transaction>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 50)
+    public async Task<IEnumerable<Transaction>> GetByUserIdAsync(string userId, int page = 1, int pageSize = 50)
     {
         return await _context.Transactions
             .Where(t => t.UserId == userId)
@@ -25,7 +25,7 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync();
     }
 
-    public async Task<Transaction?> GetByIdAsync(Guid id)
+    public async Task<Transaction?> GetByIdAsync(string id)
     {
         return await _context.Transactions.FindAsync(id);
     }
@@ -48,7 +48,7 @@ public class TransactionRepository : ITransactionRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Transaction>> GetByUserIdAndDateRangeAsync(Guid userId, DateTime from, DateTime to)
+    public async Task<IEnumerable<Transaction>> GetByUserIdAndDateRangeAsync(string userId, DateTime from, DateTime to)
     {
         return await _context.Transactions
             .Where(t => t.UserId == userId && t.TransactionDate >= from && t.TransactionDate <= to)
@@ -57,7 +57,7 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync();
     }
 
-    public async Task<decimal> GetTotalSpendAsync(Guid userId, DateTime from, DateTime to)
+    public async Task<decimal> GetTotalSpendAsync(string userId, DateTime from, DateTime to)
     {
         return await _context.Transactions
             .Where(t => t.UserId == userId && t.TransactionDate >= from && t.TransactionDate <= to)

@@ -23,7 +23,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         // ── ApplicationUser ─────────────────────────────────────────────
         builder.Entity<ApplicationUser>(e =>
         {
-            e.Property(u => u.MonthlyIncome).HasColumnType("decimal(18,2)");
+
         });
 
         // ── Account ─────────────────────────────────────────────────────

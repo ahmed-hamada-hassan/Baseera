@@ -120,9 +120,9 @@ Swagger UI is available at the root URL: **http://localhost:5002/swagger**
 
 ### Demo Credentials
 
-| Email | Password | Monthly Income |
+| Email | Password | Provider Type |
 |-------|----------|---------------|
-| `demo@baseera.com` | `Demo@123` | 25,000 EGP |
+| `demo@baseera.com` | `Demo@123` | Mixed (Bank/EWallet/Cash) |
 
 ---
 
@@ -153,7 +153,7 @@ The API uses **JWT Bearer Token** authentication with **24-hour expiration**.
    Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
    ```
 3. The token contains these claims:
-   - `sub` — User ID (GUID)
+   - `sub` — User ID (string)
    - `email` — User email
    - `firstName` / `lastName` — User name
    - `exp` — Expiration timestamp (24h from issue)
@@ -185,8 +185,7 @@ Creates a new user account (serves as onboarding).
   "email": "user@example.com",
   "password": "SecurePass@123",
   "firstName": "Ahmed",
-  "lastName": "Hassan",
-  "monthlyIncome": 25000.00
+  "lastName": "Hassan"
 }
 ```
 
@@ -194,7 +193,7 @@ Creates a new user account (serves as onboarding).
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
-  "expiration": "2026-04-30T00:09:58Z",
+  "expiration": "2026-04-30T12:00:00Z",
   "userId": "559b1975-535c-473e-973e-b2242ada747e",
   "email": "user@example.com",
   "fullName": "Ahmed Hassan"
@@ -227,7 +226,7 @@ Authenticates an existing user.
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
-  "expiration": "2026-04-30T00:09:58Z",
+  "expiration": "2026-04-30T12:00:00Z",
   "userId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "email": "demo@baseera.com",
   "fullName": "Ahmed Hassan"
@@ -253,15 +252,43 @@ Returns all financial accounts for the authenticated user.
   {
     "id": "11111111-1111-1111-1111-111111111111",
     "providerName": "CIB",
+    "providerType": "Bank",
     "balance": 18500.75
   },
   {
     "id": "22222222-2222-2222-2222-222222222222",
     "providerName": "Vodafone Cash",
+    "providerType": "EWallet",
     "balance": 3200.00
   }
 ]
 ```
+
+---
+
+#### `POST /api/accounts`
+
+Links a new financial account to the user. The initial balance is fetched from the (mocked) provider.
+
+**Request Body:**
+```json
+{
+  "providerName": "Al Rajhi Bank",
+  "providerType": "Bank"
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": "33333333-3333-3333-3333-333333333333",
+  "providerName": "Al Rajhi Bank",
+  "providerType": "Bank",
+  "balance": 24350.75
+}
+```
+
+**Valid provider types:** `Bank`, `EWallet`, `HardCash`
 
 ---
 
@@ -334,17 +361,15 @@ Returns paginated transaction history (newest first).
 
 #### `POST /api/transactions/ocr`
 
-Submits AI-processed bill data. Creates a **Pending** transaction (no account linked).
+Uploads a receipt image for AI-driven OCR processing. Creates a **Confirmed** transaction.
 
-**Request Body:**
-```json
-{
-  "amount": 175.50,
-  "merchantName": "Pizza Hut",
-  "category": "Food",
-  "transactionDate": "2026-04-28T18:00:00Z",
-  "rawAiData": "{\"confidence\": 0.95, \"items\": [\"pizza\", \"drinks\"]}"
-}
+**Request Body:** `multipart/form-data` with a `file` field.
+
+**Example (Postman/cURL):**
+```bash
+curl -X POST http://localhost:5002/api/transactions/ocr \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@receipt.jpg"
 ```
 
 **Response (201):**
@@ -356,16 +381,16 @@ Submits AI-processed bill data. Creates a **Pending** transaction (no account li
   "merchantName": "Pizza Hut",
   "category": "Food",
   "source": "OCR",
-  "status": "Pending",
+  "status": "Confirmed",
   "isSubscription": false,
   "transactionDate": "2026-04-28T18:00:00Z"
 }
 ```
 
 **Notes:**
-- `accountId` is always `null` for OCR transactions
+- `accountId` is usually `null` for OCR transactions
 - `source` is automatically set to `"OCR"`
-- `status` is automatically set to `"Pending"` — must be confirmed manually via PATCH
+- `status` is automatically set to `"Confirmed"`
 
 ---
 
@@ -496,9 +521,11 @@ Returns a comprehensive **Financial Health Overview** for the current month.
 **Response (200):**
 ```json
 {
-  "monthlyIncome": 25000.00,
+  "totalBankBalance": 18500.75,
+  "totalEWalletBalance": 3200.00,
+  "hardCashBalance": 500.00,
+  "totalLiquidity": 22200.75,
   "totalSpendThisMonth": 8970.46,
-  "remainingBudget": 16029.54,
   "totalSubscriptionCost": 1139.96,
   "activeSubscriptions": 5,
   "atRiskSubscriptions": 2,
@@ -520,8 +547,9 @@ Returns a comprehensive **Financial Health Overview** for the current month.
 ```
 
 **What's calculated:**
+- `totalBankBalance` / `totalEWalletBalance` / `hardCashBalance` — Sum of balances by provider type
+- `totalLiquidity` — Sum of all account balances
 - `totalSpendThisMonth` — Sum of all transactions from the 1st of the current month
-- `remainingBudget` — `monthlyIncome - totalSpendThisMonth`
 - `totalSubscriptionCost` — Sum of all non-cancelled subscription costs
 - `spendByCategory` — Aggregated spending grouped by category, sorted descending
 
@@ -653,33 +681,33 @@ Mobile App → Camera → AI/OCR → Extract {amount, merchant, date} → POST /
 
 | Field | Type | Description |
 |-------|------|-------------|
-| Id | string (GUID) | Identity primary key |
+| Id | string | Identity primary key |
 | FirstName | string(100) | User's first name |
 | LastName | string(100) | User's last name |
-| MonthlyIncome | decimal(18,2) | Declared income for budget |
-| Email | string | Login email |
+| Email | string | Login email & primary identifier |
 
 ### Account
 
 | Field | Type | Description |
 |-------|------|-------------|
-| Id | Guid | Primary key |
-| UserId | Guid | Owner reference |
+| Id | string | Primary key |
+| UserId | string | Owner reference |
 | ProviderName | string(150) | e.g., "CIB", "Vodafone Cash" |
+| ProviderType | Enum | `Bank` | `EWallet` | `HardCash` |
 | Balance | decimal(18,2) | Current balance |
 
 ### Transaction
 
 | Field | Type | Description |
 |-------|------|-------------|
-| Id | Guid | Primary key |
-| UserId | Guid | Owner reference |
-| AccountId | Guid? | Nullable — null for OCR/cash |
+| Id | string | Primary key |
+| UserId | string | Owner reference |
+| AccountId | string? | Nullable — null for OCR/cash |
 | Amount | decimal(18,2) | Transaction amount |
 | MerchantName | string(250) | Merchant/vendor name |
 | Category | string(100) | e.g., "Groceries", "Entertainment" |
-| Source | string(20) | `Bank` / `OCR` / `Manual` |
-| Status | string(20) | `Pending` / `Confirmed` / `Flagged` |
+| Source | string(20) | `Bank` | `OCR` | `Manual` |
+| Status | string(20) | `Pending` | `Confirmed` | `Flagged` |
 | RawAiData | nvarchar(max) | Raw JSON from AI/OCR |
 | IsSubscription | bool | Flagged by SubscriptionEngine |
 | TransactionDate | DateTime | When the transaction occurred |
@@ -688,14 +716,14 @@ Mobile App → Camera → AI/OCR → Extract {amount, merchant, date} → POST /
 
 | Field | Type | Description |
 |-------|------|-------------|
-| Id | Guid | Primary key |
-| UserId | Guid | Owner reference |
+| Id | string | Primary key |
+| UserId | string | Owner reference |
 | ServiceName | string(200) | Canonical service name |
 | MonthlyCost | decimal(18,2) | Average monthly cost |
 | LastPaymentDate | DateTime | Most recent payment |
 | LastActivityDate | DateTime? | Last usage (for AI tracking) |
 | UsageScore | decimal(18,2) | 0–100 (below 20 = AtRisk) |
-| Status | string(20) | `Active` / `AtRisk` / `Cancelled` |
+| Status | string(20) | `Active` | `AtRisk` | `Cancelled` |
 
 ---
 
@@ -723,13 +751,14 @@ The `Retry-After` response header indicates how many seconds to wait.
 
 On first startup, the database is seeded with demo data:
 
-**User:** Ahmed Hassan (`demo@baseera.com` / `Demo@123`) — Income: 25,000 EGP
+**User:** Ahmed Hassan (`demo@baseera.com` / `Demo@123`)
 
 **Accounts:**
-| Provider | Balance | ID |
-|----------|---------|-----|
-| CIB | 18,500.75 | `11111111-1111-1111-1111-111111111111` |
-| Vodafone Cash | 3,200.00 | `22222222-2222-2222-2222-222222222222` |
+| Provider | Type | Balance | ID |
+|----------|------|---------|-----|
+| CIB | Bank | 18,500.75 | `1111...` |
+| Vodafone Cash | EWallet | 3,200.00 | `2222...` |
+| Wallet | HardCash | 500.00 | `3333...` |
 
 **Transactions:** 23 diverse transactions including:
 - **Recurring:** Netflix (×3), Spotify (×3), Gold's Gym (×3), Adobe (×2), LinkedIn (×2)

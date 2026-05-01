@@ -100,10 +100,10 @@ public class ChatbotController : ControllerBase
         return Ok(response);
     }
 
-    private Guid GetUserId()
+    private string GetUserId()
     {
         var userIdClaim = User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)
                        ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(userIdClaim!);
+        return userIdClaim!;
     }
 }

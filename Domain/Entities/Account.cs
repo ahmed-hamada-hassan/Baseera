@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Baseera.Api.Domain.Enums;
 
 namespace Baseera.Api.Domain.Entities;
 
@@ -7,9 +8,11 @@ namespace Baseera.Api.Domain.Entities;
 /// </summary>
 public class Account
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
+
+    public ProviderType ProviderType { get; set; }
 
     [Required]
     [MaxLength(150)]

@@ -16,11 +16,13 @@ namespace Baseera.Api.Web.Controllers;
 public class TransactionsController : ControllerBase
 {
     private readonly ITransactionRepository _transactionRepo;
+    private readonly ITransactionService _transactionService;
     private readonly IOCRService _ocrService;
 
-    public TransactionsController(ITransactionRepository transactionRepo, IOCRService ocrService)
+    public TransactionsController(ITransactionRepository transactionRepo, ITransactionService transactionService, IOCRService ocrService)
     {
         _transactionRepo = transactionRepo;
+        _transactionService = transactionService;
         _ocrService = ocrService;
     }
 
@@ -98,7 +100,7 @@ public class TransactionsController : ControllerBase
     /// PATCH transaction status (Pending → Confirmed/Flagged).
     /// </summary>
     [HttpPatch("{id}/status")]
-    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateTransactionStatusDto dto)
+    public async Task<IActionResult> UpdateStatus(string id, [FromBody] UpdateTransactionStatusDto dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -143,39 +145,21 @@ public class TransactionsController : ControllerBase
 
         var userId = GetUserId();
 
-        var transaction = new Transaction
+        try
         {
-            UserId = userId,
-            Amount = dto.Amount,
-            MerchantName = dto.Title,
-            Category = dto.Category,
-            TransactionDate = dto.TransactionDate,
-            Source = TransactionSource.Manual.ToString(),
-            Status = TransactionStatus.Confirmed.ToString()
-        };
-
-        await _transactionRepo.AddAsync(transaction);
-
-        var responseDto = new TransactionDto
+            var responseDto = await _transactionService.AddManualTransactionAsync(userId, dto);
+            return CreatedAtAction(nameof(GetTransactions), null, responseDto);
+        }
+        catch (Exception ex)
         {
-            Id = transaction.Id,
-            AccountId = transaction.AccountId,
-            Amount = transaction.Amount,
-            MerchantName = transaction.MerchantName,
-            Category = transaction.Category,
-            Source = transaction.Source,
-            Status = transaction.Status,
-            IsSubscription = transaction.IsSubscription,
-            TransactionDate = transaction.TransactionDate
-        };
-
-        return CreatedAtAction(nameof(GetTransactions), null, responseDto);
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    private Guid GetUserId()
+    private string GetUserId()
     {
         var userIdClaim = User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)
                        ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(userIdClaim!);
+        return userIdClaim!;
     }
 }

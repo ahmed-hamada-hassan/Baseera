@@ -57,7 +57,7 @@ public class SubscriptionsController : ControllerBase
     /// PATCH — Cancel a subscription (update status to Cancelled).
     /// </summary>
     [HttpPatch("{id}/cancel")]
-    public async Task<IActionResult> CancelSubscription(Guid id)
+    public async Task<IActionResult> CancelSubscription(string id)
     {
         var subscription = await _subscriptionRepo.GetByIdAsync(id);
         if (subscription == null)
@@ -85,10 +85,10 @@ public class SubscriptionsController : ControllerBase
         });
     }
 
-    private Guid GetUserId()
+    private string GetUserId()
     {
         var userIdClaim = User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)
                        ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(userIdClaim!);
+        return userIdClaim!;
     }
 }

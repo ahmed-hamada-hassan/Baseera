@@ -11,19 +11,22 @@ public class FinancialInsightsService : IFinancialInsightsService
 {
     private readonly ISubscriptionRepository _subscriptionRepo;
     private readonly ITransactionRepository _transactionRepo;
+    private readonly IAccountRepository _accountRepo;
     private readonly ILogger<FinancialInsightsService> _logger;
 
     public FinancialInsightsService(
         ISubscriptionRepository subscriptionRepo,
         ITransactionRepository transactionRepo,
+        IAccountRepository accountRepo,
         ILogger<FinancialInsightsService> logger)
     {
         _subscriptionRepo = subscriptionRepo;
         _transactionRepo = transactionRepo;
+        _accountRepo = accountRepo;
         _logger = logger;
     }
 
-    public async Task<int> EvaluateSubscriptionsAsync(Guid userId)
+    public async Task<int> EvaluateSubscriptionsAsync(string userId)
     {
         var subscriptions = await _subscriptionRepo.GetByUserIdAsync(userId);
         int flagged = 0;
@@ -75,7 +78,7 @@ public class FinancialInsightsService : IFinancialInsightsService
         return flagged;
     }
 
-    public async Task<DashboardDto> GetDashboardAsync(Guid userId, decimal monthlyIncome)
+    public async Task<DashboardDto> GetDashboardAsync(string userId)
     {
         var now = DateTime.UtcNow;
         var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -107,11 +110,20 @@ public class FinancialInsightsService : IFinancialInsightsService
             .OrderByDescending(s => s.Amount)
             .ToList();
 
+        // Get Accounts logic for Dashboard
+        var accounts = await _accountRepo.GetByUserIdAsync(userId);
+        var totalBank = accounts.Where(a => a.ProviderType == ProviderType.Bank).Sum(a => a.Balance);
+        var totalEWallet = accounts.Where(a => a.ProviderType == ProviderType.EWallet).Sum(a => a.Balance);
+        var totalHardCash = accounts.Where(a => a.ProviderType == ProviderType.HardCash).Sum(a => a.Balance);
+        var totalLiquidity = totalBank + totalEWallet + totalHardCash;
+
         return new DashboardDto
         {
-            MonthlyIncome = monthlyIncome,
+            TotalBankBalance = totalBank,
+            TotalEWalletBalance = totalEWallet,
+            HardCashBalance = totalHardCash,
+            TotalLiquidity = totalLiquidity,
             TotalSpendThisMonth = totalSpend,
-            RemainingBudget = monthlyIncome - totalSpend,
             TotalSubscriptionCost = activeSubs.Sum(s => s.MonthlyCost),
             ActiveSubscriptions = activeSubs.Count,
             AtRiskSubscriptions = atRiskSubs.Count,

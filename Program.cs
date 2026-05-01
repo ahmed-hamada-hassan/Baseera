@@ -130,6 +130,7 @@ builder.Services.AddScoped<IBankSyncService, BankSyncService>();
 builder.Services.AddScoped<ISubscriptionEngine, SubscriptionEngine>();
 builder.Services.AddScoped<IFinancialInsightsService, FinancialInsightsService>();
 builder.Services.AddScoped<IOCRService, OCRService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 // ══════════════════════════════════════════════════════════════════════════
 // 6. CONTROLLERS & SWAGGER
@@ -194,6 +195,8 @@ var app = builder.Build();
 // ══════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE PIPELINE
 // ══════════════════════════════════════════════════════════════════════════
+app.UseCors("AllowAll"); // Moved to the top to handle preflight requests early
+
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -206,8 +209,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -216,6 +221,9 @@ app.MapControllers();
 // ══════════════════════════════════════════════════════════════════════════
 // SEED DATA — Auto-run on startup for demo
 // ══════════════════════════════════════════════════════════════════════════
-await SeedData.InitializeAsync(app.Services);
+if(app.Environment.IsDevelopment())
+{
+    await SeedData.InitializeAsync(app.Services);
+}
 
 app.Run();

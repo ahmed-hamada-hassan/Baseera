@@ -8,10 +8,10 @@ public interface IFinancialInsightsService
     /// Evaluates subscriptions and flags those that are at-risk
     /// (UsageScore &lt; 20 or inactive &gt; 30 days).
     /// </summary>
-    Task<int> EvaluateSubscriptionsAsync(Guid userId);
+    Task<int> EvaluateSubscriptionsAsync(string userId);
 
     /// <summary>
     /// Returns a dashboard overview with total spend, budget remaining, and at-risk subscriptions.
     /// </summary>
-    Task<DashboardDto> GetDashboardAsync(Guid userId, decimal monthlyIncome);
+    Task<DashboardDto> GetDashboardAsync(string userId);
 }
