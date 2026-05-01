@@ -84,17 +84,17 @@ public static class SeedData
                 // Recurring — Netflix
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 199.99m, MerchantName = "Netflix", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-60) },
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 199.99m, MerchantName = "NETFLIX.COM", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-30) },
-                new() { UserId = userId, AccountId = CibAccountId, Amount = 199.99m, MerchantName = "Netflix Inc", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-1) },
+                new() { UserId = userId, AccountId = CibAccountId, Amount = 199.99m, MerchantName = "Netflix Inc", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now },
 
                 // Recurring — Spotify
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 49.99m, MerchantName = "Spotify", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-58) },
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 49.99m, MerchantName = "SPOTIFY AB", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-28) },
-                new() { UserId = userId, AccountId = CibAccountId, Amount = 49.99m, MerchantName = "Spotify Premium", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-2) },
+                new() { UserId = userId, AccountId = CibAccountId, Amount = 49.99m, MerchantName = "Spotify Premium", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now },
 
                 // Recurring — Gym (Gold's Gym)
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 500.00m, MerchantName = "Gold's Gym", Category = "Health & Fitness", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-62) },
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 500.00m, MerchantName = "GOLDS GYM CAIRO", Category = "Health & Fitness", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-32) },
-                new() { UserId = userId, AccountId = CibAccountId, Amount = 500.00m, MerchantName = "Gold's Gym", Category = "Health & Fitness", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-3) },
+                new() { UserId = userId, AccountId = CibAccountId, Amount = 500.00m, MerchantName = "Gold's Gym", Category = "Health & Fitness", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now },
 
                 // Recurring — Adobe Creative Cloud
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 239.99m, MerchantName = "Adobe Creative Cloud", Category = "Software", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-55) },
@@ -111,8 +111,8 @@ public static class SeedData
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 3500.00m, MerchantName = "Zara", Category = "Shopping", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-12) },
                 new() { UserId = userId, AccountId = VodafoneAccountId, Amount = 200.00m, MerchantName = "Vodafone Recharge", Category = "Telecom", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-7) },
                 new() { UserId = userId, AccountId = HardCashAccountId, Amount = 350.00m, MerchantName = "Street Vendor", Category = "Food", Source = "OCR", Status = "Pending", IsSubscription = false, TransactionDate = now.AddDays(-4), RawAiData = "{\"confidence\":0.82,\"items\":[\"lunch\",\"drinks\"]}" },
-                new() { UserId = userId, AccountId = CibAccountId, Amount = 450.00m, MerchantName = "Amazon.eg", Category = "Shopping", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-6) },
-                new() { UserId = userId, AccountId = HardCashAccountId, Amount = 75.00m, MerchantName = "Pharmacy", Category = "Health", Source = "Manual", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-2) },
+                new() { UserId = userId, AccountId = CibAccountId, Amount = 450.00m, MerchantName = "Amazon.eg", Category = "Shopping", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now },
+                new() { UserId = userId, AccountId = HardCashAccountId, Amount = 75.00m, MerchantName = "Pharmacy", Category = "Health", Source = "Manual", Status = "Confirmed", IsSubscription = false, TransactionDate = now },
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 1800.00m, MerchantName = "Electricity Bill", Category = "Utilities", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-20) },
             };
 
@@ -132,8 +132,8 @@ public static class SeedData
                     UserId = userId,
                     ServiceName = "Netflix",
                     MonthlyCost = 199.99m,
-                    LastPaymentDate = now.AddDays(-1),
-                    LastActivityDate = now.AddDays(-1),
+                    LastPaymentDate = now,
+                    LastActivityDate = now,
                     UsageScore = 85,
                     Status = SubscriptionStatus.Active.ToString()
                 },
@@ -142,8 +142,8 @@ public static class SeedData
                     UserId = userId,
                     ServiceName = "Spotify",
                     MonthlyCost = 49.99m,
-                    LastPaymentDate = now.AddDays(-2),
-                    LastActivityDate = now.AddDays(-2),
+                    LastPaymentDate = now,
+                    LastActivityDate = now,
                     UsageScore = 72,
                     Status = SubscriptionStatus.Active.ToString()
                 },
