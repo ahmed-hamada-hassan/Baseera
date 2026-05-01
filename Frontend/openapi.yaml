@@ -1,0 +1,888 @@
+openapi: 3.0.3
+
+info:
+  title: Baseera API
+  version: v1
+  description: |
+    **FinTech Hackathon MVP** — Personal Finance Management with AI-Driven Subscription Detection.
+
+    Baseera helps users track spending, detect recurring subscriptions automatically,
+    and receive actionable financial health insights via a single dashboard.
+
+    ### Authentication
+    All endpoints (except Register & Login) require a valid JWT Bearer token
+    in the `Authorization` header.
+
+    ### Rate Limiting
+    - **Auth endpoints**: 5 requests/minute per IP (`IpRateLimit`).
+    - **Protected endpoints**: 40 requests/minute per user (`UserRateLimit`).
+    - Exceeding limits returns `429 Too Many Requests` with a `Retry-After` header.
+  contact:
+    name: Baseera Team
+    email: team@baseera.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://baseera.runasp.net
+    description: Production Server
+  - url: https://localhost:7181
+    description: Local Development (HTTPS)
+  - url: http://localhost:5002
+    description: Local Development (HTTP)
+
+tags:
+  - name: Auth
+    description: Registration and login — returns JWT tokens.
+  - name: Accounts
+    description: Bank accounts and Open Banking sync.
+  - name: Transactions
+    description: Transaction history, OCR ingestion, and status updates.
+  - name: Subscriptions
+    description: AI-detected subscriptions and cancellation.
+  - name: Dashboard
+    description: Financial health overview and insights.
+  - name: Analytics
+    description: Analytics and spending summaries.
+  - name: Chatbot
+    description: Interactive AI chat for financial queries.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SECURITY
+# ─────────────────────────────────────────────────────────────────────────────
+security:
+  - BearerAuth: []
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+  # ═══════════════════════════════ AUTH ═════════════════════════════════════
+  /api/Auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      description: |
+        Creates a new user account and returns a JWT token (24 h expiry).
+        Also serves as onboarding — sets the user's monthly income for budget calculations.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              email: demo@baseera.com
+              password: "P@ssw0rd!"
+              firstName: Ahmed
+              lastName: Hassan
+              monthlyIncome: 15000.00
+      responses:
+        "200":
+          description: Registration successful — JWT token returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                token: "eyJhbGciOiJIUzI1NiIs..."
+                expiration: "2026-04-30T12:00:00Z"
+                userId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                email: demo@baseera.com
+                fullName: Ahmed Hassan
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: A user with this email already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: A user with this email already exists.
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/Auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      description: Authenticates the user and returns a JWT token valid for 24 hours.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: demo@baseera.com
+              password: "P@ssw0rd!"
+      responses:
+        "200":
+          description: Login successful — JWT token returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Invalid email or password.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: Invalid email or password.
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ═══════════════════════════════ ACCOUNTS ════════════════════════════════
+  /api/Accounts:
+    get:
+      tags: [Accounts]
+      summary: List all accounts
+      description: Returns every bank account linked to the authenticated user.
+      responses:
+        "200":
+          description: A list of accounts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+              example:
+                - id: "b7e1c2d3-4f56-7890-abcd-123456789abc"
+                  providerName: Al Rajhi Bank
+                  balance: 24350.75
+                - id: "c8f2d3e4-5a67-8901-bcde-234567890bcd"
+                  providerName: STC Pay
+                  balance: 1200.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/Accounts/sync:
+    post:
+      tags: [Accounts]
+      summary: Sync transactions from Open Banking
+      description: |
+        Pulls new transactions from the (mocked) Open Banking provider for the
+        specified account, then automatically runs the AI subscription detection engine.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncRequest"
+            example:
+              accountId: "b7e1c2d3-4f56-7890-abcd-123456789abc"
+      responses:
+        "200":
+          description: Sync completed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResponse"
+              example:
+                message: "Synced 12 transactions. Detected 3 new subscriptions."
+                transactionsSynced: 12
+                subscriptionsDetected: 3
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Account not found or does not belong to the user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: Account not found.
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ═══════════════════════════════ TRANSACTIONS ════════════════════════════
+  /api/Transactions:
+    get:
+      tags: [Transactions]
+      summary: Get transaction history (paginated)
+      description: Returns the authenticated user's transactions ordered by date, with pagination.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number (1-indexed).
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+          description: Number of transactions per page.
+      responses:
+        "200":
+          description: A paginated list of transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+              example:
+                - id: "d9a3e4f5-6b78-9012-cdef-345678901def"
+                  accountId: "b7e1c2d3-4f56-7890-abcd-123456789abc"
+                  amount: 49.99
+                  merchantName: Netflix
+                  category: Entertainment
+                  source: OpenBanking
+                  status: Confirmed
+                  isSubscription: true
+                  transactionDate: "2026-04-15T08:30:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/Transactions/ocr:
+    post:
+      tags: [Transactions]
+      summary: Submit OCR-processed bill data
+      description: |
+        Accepts structured data extracted by the AI/OCR processor from a scanned
+        receipt or bill. Creates a new transaction with status **Pending**.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OcrResult"
+            example:
+              amount: 45.99
+              merchantName: STC Fiber
+              category: Utilities
+              transactionDate: "2026-04-28T10:00:00Z"
+              rawAiData: '{"confidence": 0.95, "source": "receipt_scan"}'
+      responses:
+        "201":
+          description: Transaction created from OCR data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/Transactions/{id}/status:
+    patch:
+      tags: [Transactions]
+      summary: Update transaction status
+      description: |
+        Changes a transaction's status. Typical flow: `Pending → Confirmed` or `Pending → Flagged`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Transaction ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTransactionStatus"
+            example:
+              status: Confirmed
+      responses:
+        "200":
+          description: Status updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Invalid status value.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: "Invalid status. Accepted values: Pending, Confirmed, Flagged"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Transaction not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: Transaction not found.
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ═══════════════════════════════ SUBSCRIPTIONS ══════════════════════════
+  /api/Subscriptions:
+    get:
+      tags: [Subscriptions]
+      summary: Get all subscriptions
+      description: |
+        Returns every AI-detected subscription for the authenticated user.
+        Automatically evaluates at-risk status before returning results.
+      responses:
+        "200":
+          description: A list of subscriptions with current status.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscription"
+              example:
+                - id: "e0b4f5a6-7c89-0123-defa-456789012efa"
+                  serviceName: Netflix
+                  monthlyCost: 49.99
+                  lastPaymentDate: "2026-04-15T00:00:00Z"
+                  lastActivityDate: "2026-04-20T14:30:00Z"
+                  usageScore: 0.85
+                  status: Active
+                - id: "f1c5a6b7-8d90-1234-efab-567890123fab"
+                  serviceName: Gym Membership
+                  monthlyCost: 199.00
+                  lastPaymentDate: "2026-04-01T00:00:00Z"
+                  lastActivityDate: "2026-02-10T09:00:00Z"
+                  usageScore: 0.15
+                  status: AtRisk
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/Subscriptions/{id}/cancel:
+    patch:
+      tags: [Subscriptions]
+      summary: Cancel a subscription
+      description: Sets the subscription status to **Cancelled**.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Subscription ID.
+      responses:
+        "200":
+          description: Subscription cancelled successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "400":
+          description: Subscription is already cancelled.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: Subscription is already cancelled.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: Subscription not found.
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ═══════════════════════════════ DASHBOARD ══════════════════════════════
+  /api/Dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get Financial Health Dashboard
+      description: |
+        Returns a comprehensive financial overview including total spend,
+        remaining budget, at-risk subscriptions, and spend-by-category breakdown.
+      responses:
+        "200":
+          description: Dashboard data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+              example:
+                monthlyIncome: 15000.00
+                totalSpendThisMonth: 4320.50
+                remainingBudget: 10679.50
+                totalSubscriptionCost: 748.97
+                activeSubscriptions: 5
+                atRiskSubscriptions: 2
+                atRiskSubscriptionsList:
+                  - id: "f1c5a6b7-8d90-1234-efab-567890123fab"
+                    serviceName: Gym Membership
+                    monthlyCost: 199.00
+                    lastPaymentDate: "2026-04-01T00:00:00Z"
+                    lastActivityDate: "2026-02-10T09:00:00Z"
+                    usageScore: 0.15
+                    status: AtRisk
+                spendByCategory:
+                  - category: Entertainment
+                    amount: 249.97
+                  - category: Utilities
+                    amount: 850.00
+                  - category: Food
+                    amount: 1200.53
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                message: User not found.
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ═══════════════════════════════ ANALYTICS ══════════════════════════════
+  /api/Analytics/summary:
+    get:
+      tags: [Analytics]
+      summary: Get Analytics Summary
+      description: Returns an aggregation of total spending grouped by Category for the current user.
+      responses:
+        "200":
+          description: Analytics data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpendByCategory"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ═══════════════════════════════ CHATBOT ════════════════════════════════
+  /api/Chatbot/message:
+    post:
+      tags: [Chatbot]
+      summary: Send a message to the Chatbot
+      description: Returns a structured response containing a text reply and a ChartData object based on the user's message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "How much did I spend on Uber?"
+      responses:
+        "200":
+          description: Chatbot response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+  # ═══════════════════════════════ SECURITY ════════════════════════════════
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Paste the token returned by `/api/Auth/login` or `/api/Auth/register`.
+
+  # ═══════════════════════════════ SCHEMAS ═════════════════════════════════
+  schemas:
+    # ── Auth ──────────────────────────────────────────────────────────────
+    RegisterRequest:
+      type: object
+      required: [email, password, firstName, lastName]
+      properties:
+        email:
+          type: string
+          format: email
+          example: demo@baseera.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: "Must contain: uppercase, lowercase, digit, and special character."
+          example: "P@ssw0rd!"
+        firstName:
+          type: string
+          maxLength: 100
+          example: Ahmed
+        lastName:
+          type: string
+          maxLength: 100
+          example: Hassan
+        monthlyIncome:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Monthly income — used for budget calculations.
+          example: 15000.00
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: demo@baseera.com
+        password:
+          type: string
+          format: password
+          example: "P@ssw0rd!"
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Bearer token (24 h expiry).
+        expiration:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          description: ASP.NET Identity user ID.
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+
+    # ── Accounts ──────────────────────────────────────────────────────────
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        providerName:
+          type: string
+          example: Al Rajhi Bank
+        balance:
+          type: number
+          format: decimal
+          example: 24350.75
+
+    SyncRequest:
+      type: object
+      required: [accountId]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+
+    SyncResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        transactionsSynced:
+          type: integer
+        subscriptionsDetected:
+          type: integer
+
+    # ── Transactions ──────────────────────────────────────────────────────
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: number
+          format: decimal
+        merchantName:
+          type: string
+        category:
+          type: string
+        source:
+          type: string
+          description: "Origin of the transaction (e.g., OpenBanking, OCR)."
+        status:
+          type: string
+          enum: [Pending, Confirmed, Flagged]
+        isSubscription:
+          type: boolean
+        transactionDate:
+          type: string
+          format: date-time
+
+    OcrResult:
+      type: object
+      required: [amount, merchantName]
+      properties:
+        amount:
+          type: number
+          format: decimal
+          example: 45.99
+        merchantName:
+          type: string
+          maxLength: 250
+          example: STC Fiber
+        category:
+          type: string
+          maxLength: 100
+          example: Utilities
+        transactionDate:
+          type: string
+          format: date-time
+        rawAiData:
+          type: string
+          nullable: true
+          description: Raw JSON payload from the AI/OCR processor.
+
+    UpdateTransactionStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          maxLength: 20
+          enum: [Pending, Confirmed, Flagged]
+          description: "Accepted values: Pending, Confirmed, Flagged."
+
+    # ── Subscriptions ─────────────────────────────────────────────────────
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        serviceName:
+          type: string
+          example: Netflix
+        monthlyCost:
+          type: number
+          format: decimal
+          example: 49.99
+        lastPaymentDate:
+          type: string
+          format: date-time
+        lastActivityDate:
+          type: string
+          format: date-time
+          nullable: true
+        usageScore:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 1
+          description: "AI-computed score (0 = unused, 1 = heavily used)."
+          example: 0.85
+        status:
+          type: string
+          enum: [Active, AtRisk, Cancelled]
+
+    # ── Dashboard ─────────────────────────────────────────────────────────
+    Dashboard:
+      type: object
+      properties:
+        monthlyIncome:
+          type: number
+          format: decimal
+        totalSpendThisMonth:
+          type: number
+          format: decimal
+        remainingBudget:
+          type: number
+          format: decimal
+        totalSubscriptionCost:
+          type: number
+          format: decimal
+        activeSubscriptions:
+          type: integer
+        atRiskSubscriptions:
+          type: integer
+        atRiskSubscriptionsList:
+          type: array
+          items:
+            $ref: "#/components/schemas/Subscription"
+        spendByCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpendByCategory"
+
+    SpendByCategory:
+      type: object
+      properties:
+        category:
+          type: string
+          example: Entertainment
+        amount:
+          type: number
+          format: decimal
+          example: 249.97
+
+    # ── Chatbot ───────────────────────────────────────────────────────────
+    ChatMessageResponse:
+      type: object
+      properties:
+        textReply:
+          type: string
+          example: "You spent $250.00 on Uber/Transport."
+        chartData:
+          $ref: "#/components/schemas/ChartData"
+
+    ChartData:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+          example: ["Uber/Transport", "Other Spend"]
+        values:
+          type: array
+          items:
+            type: number
+            format: decimal
+          example: [250.00, 1000.00]
+
+    # ── Shared Error ──────────────────────────────────────────────────────
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+
+    GlobalError:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ValidationError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+
+  # ═══════════════════════════════ RESPONSES ═══════════════════════════════
+  responses:
+    BadRequest:
+      description: Validation failed or malformed request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+          example:
+            errors:
+              - "The Email field is required."
+              - "The Password field must be at least 6 characters."
+
+    Unauthorized:
+      description: Missing or invalid JWT token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GlobalError"
+          example:
+            status: 401
+            message: Unauthorized access.
+            timestamp: "2026-04-29T12:00:00Z"
+
+    Forbidden:
+      description: Authenticated but not authorized to access this resource.
+
+    TooManyRequests:
+      description: Rate limit exceeded — check the `Retry-After` header.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until the next request is allowed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+          example:
+            error: "Too many requests. Please check the Retry-After header."
+
+    ServerError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GlobalError"
+          example:
+            status: 500
+            message: An unexpected error occurred. Please try again later.
+            timestamp: "2026-04-29T12:00:00Z"
