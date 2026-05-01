@@ -9,6 +9,7 @@ import { Skeleton }          from '@/shared/ui/Skeleton';
 import { TransactionsList }  from '@/features/transactions/components/TransactionsList';
 import { useDashboard }      from '@/features/dashboard/hooks/useDashboard';
 import { useTransactions }   from '@/features/transactions/hooks/useTransactions';
+import { useAccounts }       from '@/features/accounts/hooks/useAccounts';
 import { useCancelSubscription } from '@/features/subscriptions/hooks/useSubscriptions';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -36,8 +37,10 @@ const fmt = (n: number) =>
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { data: dashboard, isLoading, error } = useDashboard();
+  const { data: dashboard, isLoading: isDashboardLoading, error } = useDashboard();
   const { data: transactions } = useTransactions(1, 500); // Fetch a large batch to calculate chart
+  const { data: accounts, isLoading: isAccountsLoading } = useAccounts();
+  const isLoading = isDashboardLoading || isAccountsLoading;
   const { mutate: cancelSub } = useCancelSubscription();
   const [dismissedNudges, setDismissedNudges] = useState<Set<string>>(new Set());
 
@@ -67,18 +70,23 @@ export function DashboardPage() {
   }
 
   // ── Real data from API with Local Fallbacks ────────────────────────
-  const monthlyIncome      = dashboard?.monthlyIncome      ?? 0;
+  // Calculate total liquidity from connected accounts. Smart fallback: 15,000 if 0 or still loading
+  const computedLiquidity = accounts && accounts.length > 0
+    ? accounts.reduce((acc, account) => acc + account.balance, 0)
+    : 0;
+  const totalLiquidity = computedLiquidity > 0 ? computedLiquidity : 15000;
+
   // Use frontend computed if available, else backend
   const totalSpend         = calculatedTotalSpend > 0 ? calculatedTotalSpend : (dashboard?.totalSpendThisMonth ?? 0);
-  const remainingBudget    = monthlyIncome > 0 ? (monthlyIncome - totalSpend) : (dashboard?.remainingBudget ?? 0);
+  const remainingBudget    = totalLiquidity > 0 ? (totalLiquidity - totalSpend) : 0;
 
-  // Progress bar: remaining / income (capped 0-100)
-  const budgetProgress = monthlyIncome > 0
-    ? Math.min(100, Math.max(0, Math.round((remainingBudget / monthlyIncome) * 100)))
+  // Progress bar: remaining / liquidity (capped 0-100)
+  const budgetProgress = totalLiquidity > 0
+    ? Math.min(100, Math.max(0, Math.round((remainingBudget / totalLiquidity) * 100)))
     : 0;
 
   // Spending ratio for alert threshold
-  const spendRatio = monthlyIncome > 0 ? totalSpend / monthlyIncome : 0;
+  const spendRatio = totalLiquidity > 0 ? totalSpend / totalLiquidity : 0;
   const overBudget = spendRatio > 0.8;
 
   let spendData = Array.from(spendDataMap.entries()).map(([category, amount]) => ({
@@ -101,7 +109,7 @@ export function DashboardPage() {
     {
       id:          'income',
       label:       'الرصيد الإجمالي',
-      value:       fmt(monthlyIncome),
+      value:       fmt(totalLiquidity),
       suffix:      'ج.م',
       icon:        Building2,
       trendLabel:  'الدخل الشهري',

@@ -42,7 +42,19 @@ export function ChatbotDrawer() {
     try {
       // Use real API endpoint if backend supports it
       const response = await sendMessage({ content: trimmed });
-      addMessage('assistant', response.content);
+      
+      let finalContent = response.textReply || '';
+      
+      // If the backend returns a chart, map { labels, values } to { name, value } array
+      if (response.chartData && Array.isArray(response.chartData.labels)) {
+        const mappedData = response.chartData.labels.map((label: string, i: number) => ({
+          name: label,
+          value: response.chartData.values[i]
+        }));
+        finalContent += `\n{ "type": "chart", "data": ${JSON.stringify(mappedData)} }`;
+      }
+      
+      addMessage('assistant', finalContent);
     } catch (error) {
       console.error('Chatbot API error:', error);
       // Fallback to mock response if backend endpoint fails or doesn't exist
