@@ -7,7 +7,7 @@ namespace Baseera.Api.Infrastructure.Data;
 
 /// <summary>
 /// Seeds the database with demo data on first startup.
-/// Creates 1 user, 2 accounts, 20+ transactions, and 5 subscriptions.
+/// Creates 1 user, 2 accounts, 20+ transactions, and 6 subscriptions.
 /// </summary>
 public static class SeedData
 {
@@ -104,6 +104,10 @@ public static class SeedData
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 149.99m, MerchantName = "LinkedIn Premium", Category = "Professional", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-45) },
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 149.99m, MerchantName = "LINKEDIN CORP", Category = "Professional", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-15) },
 
+                // Recurring — Disney Plus
+                new() { UserId = userId, AccountId = CibAccountId, Amount = 120.00m, MerchantName = "Disney Plus", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-65) },
+                new() { UserId = userId, AccountId = CibAccountId, Amount = 120.00m, MerchantName = "DISNEYPLUS", Category = "Entertainment", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-35) },
+
                 // One-off transactions
                 new() { UserId = userId, AccountId = CibAccountId, Amount = 1250.00m, MerchantName = "Carrefour", Category = "Groceries", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-10) },
                 new() { UserId = userId, AccountId = VodafoneAccountId, Amount = 85.50m, MerchantName = "Uber", Category = "Transport", Source = "Bank", Status = "Confirmed", IsSubscription = false, TransactionDate = now.AddDays(-8) },
@@ -155,7 +159,7 @@ public static class SeedData
                     LastPaymentDate = now.AddDays(-3),
                     LastActivityDate = now.AddDays(-45),  // Not used in 45 days → At-Risk
                     UsageScore = 12,                       // Below 20 → At-Risk
-                    Status = SubscriptionStatus.Active.ToString()
+                    Status = SubscriptionStatus.AtRisk.ToString()
                 },
                 new Subscription
                 {
@@ -165,9 +169,9 @@ public static class SeedData
                     LastPaymentDate = now.AddDays(-25),
                     LastActivityDate = now.AddDays(-40),  // Not used in 40 days → At-Risk
                     UsageScore = 8,                        // Below 20 → At-Risk
-                    Status = SubscriptionStatus.Active.ToString()
+                    Status = SubscriptionStatus.AtRisk.ToString()
                 },
-                new Subscription
+                new()
                 {
                     UserId = userId,
                     ServiceName = "LinkedIn Premium",
@@ -176,6 +180,16 @@ public static class SeedData
                     LastActivityDate = now.AddDays(-10),
                     UsageScore = 45,
                     Status = SubscriptionStatus.Active.ToString()
+                },
+                new Subscription
+                {
+                    UserId = userId,
+                    ServiceName = "Disney Plus",
+                    MonthlyCost = 120.00m,
+                    LastPaymentDate = now.AddDays(-35),
+                    LastActivityDate = now.AddDays(-40), // At-Risk: > 30 days
+                    UsageScore = 15,                      // At-Risk: < 20
+                    Status = SubscriptionStatus.AtRisk.ToString()
                 }
             );
             await context.SaveChangesAsync();
