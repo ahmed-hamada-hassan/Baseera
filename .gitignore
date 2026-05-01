@@ -1,0 +1,23 @@
+## Visual Studio Build Outputs
+bin/
+obj/
+
+## Visual Studio Cache & Settings
+.vs/
+Properties/
+*.user
+*.userosscache
+*.sln.docstates
+
+## HTTP Client folders
+.http/
+
+## OS generated files
+Thumbs.db
+desktop.ini
+
+## Optional: Local settings
+appsettings.Development.json
+
+## AI Planning
+implementation_plan.md

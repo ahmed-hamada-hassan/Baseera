@@ -221,9 +221,6 @@ app.MapControllers();
 // ══════════════════════════════════════════════════════════════════════════
 // SEED DATA — Auto-run on startup for demo
 // ══════════════════════════════════════════════════════════════════════════
-if(app.Environment.IsDevelopment())
-{
-    await SeedData.InitializeAsync(app.Services);
-}
+await SeedData.InitializeAsync(app.Services);
 
 app.Run();
