@@ -18,8 +18,7 @@ export const RegisterRequestSchema = z.object({
   password: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
   firstName: z.string().max(100),
   lastName: z.string().max(100),
-  monthlyIncome: z.number().nonnegative(),
-});
+})  
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 
 export const AuthResponseSchema = z.object({

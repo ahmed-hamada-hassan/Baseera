@@ -22,7 +22,6 @@ const RegisterSchema = z.object({
   lastName:      z.string().min(2, 'اسم العائلة مطلوب'),
   email:         z.string().email('البريد الإلكتروني غير صالح'),
   password:      z.string().min(6, 'كلمة المرور يجب أن تكون ٦ أحرف على الأقل'),
-  monthlyIncome: z.coerce.number().min(0, 'يجب أن يكون الدخل الشهري رقماً موجباً'),
 });
 type RegisterForm = z.infer<typeof RegisterSchema>;
 
@@ -232,28 +231,6 @@ export function LoginPage() {
                   </div>
                 </div>
                 {registerForm.formState.errors.password && <p className="text-xs text-red-500 mt-1 text-right">{registerForm.formState.errors.password.message}</p>}
-              </div>
-
-              {/* Bank or Wallet Input */}
-              <div>
-                <label htmlFor="monthlyIncome" className="block text-sm font-medium text-[#1E293B] mb-1.5 text-right">رقم الحساب البنكي أو المحفظة</label>
-                <div className="relative flex gap-2" dir="rtl">
-                  <select 
-                    className="w-1/3 h-12 px-2 rounded-lg border border-[#CBD5E1] bg-white text-[#1E293B] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all text-sm"
-                  >
-                    <option value="bank">حساب بنكي</option>
-                    <option value="wallet">محفظة إلكترونية</option>
-                  </select>
-                  <input
-                    id="monthlyIncome"
-                    type="number"
-                    required
-                    placeholder="أدخل الرقم..."
-                    className="w-2/3 h-12 px-4 rounded-lg border border-[#CBD5E1] bg-white text-[#1E293B] placeholder-[#94A3B8] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] outline-none text-right transition-all tracking-widest font-mono"
-                    {...registerForm.register('monthlyIncome', { valueAsNumber: true })}
-                  />
-                </div>
-                {registerForm.formState.errors.monthlyIncome && <p className="text-xs text-red-500 mt-1 text-right">{registerForm.formState.errors.monthlyIncome.message}</p>}
               </div>
 
               {/* Submit Button */}

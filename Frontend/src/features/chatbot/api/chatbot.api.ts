@@ -2,7 +2,7 @@
  * @file features/chatbot/api/chatbot.api.ts
  */
 
-import apiClient from '@/shared/lib/axios';
+import apiClient, { tokenService } from '@/shared/lib/axios';
 import {
   AiResponseSchema,
   type AiResponse,
@@ -13,14 +13,31 @@ import {
 
 export const chatbotApi = {
   /** إرسال رسالة للـ AI */
-  sendMessage: async (payload: SendMessageRequest): Promise<AiResponse> => {
-    const { data } = await apiClient.post('/chatbot/message', payload);
-    const result = AiResponseSchema.safeParse(data);
-    if (!result.success) {
-      console.warn('[ChatbotAPI] sendMessage schema mismatch:', result.error.flatten());
-      return data as AiResponse;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sendMessage: async (payload: SendMessageRequest): Promise<any> => {
+    const jwtToken = tokenService.get();
+    const response = await fetch("http://localhost:8000/api/chatbot/message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify({ message: payload.content }),
+    });
+
+    if (!response.ok) {
+      let errorDetail = 'Chatbot API Error';
+      try {
+        const error = await response.json();
+        errorDetail = error.detail || errorDetail;
+      } catch (e) {
+        // Ignore json parse error
+      }
+      throw new Error(errorDetail);
     }
-    return result.data;
+
+    const data = await response.json();
+    return data;
   },
 
   /** جلب جلسة محادثة */
