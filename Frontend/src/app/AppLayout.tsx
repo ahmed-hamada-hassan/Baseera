@@ -14,6 +14,7 @@ import {
   LogOut,
   Wallet,
   Search,
+  Package,
 } from 'lucide-react';
 import { Notification } from '@/shared/ui/Notification/Notification';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary/ErrorBoundary';
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/transactions',  label: 'المعاملات',     icon: CreditCard },
   { to: '/subscriptions', label: 'الاشتراكات',    icon: Activity },
   { to: '/accounts',      label: 'الحسابات',      icon: Wallet },
+  { to: '/pricing',       label: 'الباقات',       icon: Package },
 ] as const;
 
 export function AppLayout() {
