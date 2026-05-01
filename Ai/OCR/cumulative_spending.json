@@ -1,0 +1,21 @@
+{
+  "Main_Categories": {
+    "Restaurants & Dining": 0.0,
+    "Healthcare & Medical": 0.0,
+    "Entertainment & Leisure": 0.0,
+    "Groceries & Supermarkets": 834.5,
+    "Transportation & Auto": 0.0,
+    "Utilities & Retail": 17135.0
+  },
+  "Micro_Categories": {
+    "Food Items": 617.0,
+    "Beverages": 0.0,
+    "Pharmacy & Meds": 0.0,
+    "Services & Fees": 17135.0,
+    "Tickets & Admissions": 0.0,
+    "Clothing & Apparel": 0.0,
+    "Household Supplies": 48.0,
+    "Electronics & Tech": 0.0,
+    "Fuel & Mileage": 0.0
+  }
+}

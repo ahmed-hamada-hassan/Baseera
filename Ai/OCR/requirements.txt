@@ -1,0 +1,16 @@
+# =============================================================================
+# requirements.txt
+# =============================================================================
+# Install all dependencies with:
+#   pip install -r requirements.txt
+# =============================================================================
+
+# Google Gemini SDK (new unified package — replaces deprecated google-generativeai)
+google-genai>=1.74.0
+
+# Image loading and format conversion
+Pillow>=12.2.0
+
+# HTTP client — used by run_live.py to fetch images and (when activated) to POST
+# transactions. Already available in most Python environments, pinned for safety.
+requests>=2.33.1
