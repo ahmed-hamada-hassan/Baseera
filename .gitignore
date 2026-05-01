@@ -25,3 +25,4 @@ implementation_plan.md
 .env
 pycache
 .venv/
+.idea/
